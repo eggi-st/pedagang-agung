@@ -13,28 +13,76 @@
 <body>
 <div id="game">
   <h1>⚔ PEDAGANG AGUNG ⚔</h1>
-  <div class="subtitle">8-bit trading & adventure — terinspirasi Xian: The Great Merchant</div>
+  <div class="subtitle">8-bit trading &amp; adventure — terinspirasi Xian: The Great Merchant</div>
+
+  <div class="parade">
+    <canvas class="sprite-canvas" width="36" height="36" data-sprite="player:Joseon:Pedagang"></canvas>
+    <canvas class="sprite-canvas" width="36" height="36" data-sprite="general:3:Petarung"></canvas>
+    <canvas class="sprite-canvas" width="36" height="36" data-sprite="monster:Angin:Serigala Hutan"></canvas>
+    <canvas class="sprite-canvas" width="36" height="36" data-sprite="monster:Bumi:Golem Batu"></canvas>
+    <canvas class="sprite-canvas" width="36" height="36" data-sprite="general:5:Cendekiawan"></canvas>
+  </div>
 
   <div id="setup-nation" class="panel">
     <div class="city-title">Pilih Slot Simpanan</div>
     <div class="slot-row" id="slot-row"></div>
     <div id="continue-slot"></div>
     <div class="city-title">Pilih Negara Asal</div>
-    <button class="green" onclick="chooseNation('Joseon')">🇰🇷 Joseon — 500 gold, STR tinggi, jalur aman</button>
-    <button class="gold" onclick="chooseNation('China')">🇨🇳 China — 350 gold, INT tinggi, harga barang murah</button>
-    <button class="red" onclick="chooseNation('Jepang')">🇯🇵 Jepang — 300 gold, AGI & LUK tinggi</button>
+    <div class="choice-grid">
+      <button class="green choice" onclick="chooseNation('Joseon')">
+        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Joseon:Petarung"></canvas></span>
+        <span class="choice-body">
+          <b class="choice-name">🇰🇷 Joseon</b>
+          <small>500 gold · STR tinggi · jalur aman</small>
+        </span>
+      </button>
+      <button class="gold choice" onclick="chooseNation('China')">
+        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:China:Cendekiawan"></canvas></span>
+        <span class="choice-body">
+          <b class="choice-name">🇨🇳 China</b>
+          <small>350 gold · INT tinggi · harga barang murah</small>
+        </span>
+      </button>
+      <button class="red choice" onclick="chooseNation('Jepang')">
+        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Jepang:Pedagang"></canvas></span>
+        <span class="choice-body">
+          <b class="choice-name">🇯🇵 Jepang</b>
+          <small>300 gold · AGI &amp; LUK tinggi</small>
+        </span>
+      </button>
+    </div>
   </div>
 
   <div id="setup-class" class="panel" style="display:none;">
     <div class="city-title">Pilih Kelas Karakter</div>
-    <button class="teal" onclick="chooseClass('Pedagang')">🧑‍💼 Pedagang — Kapasitas +20, harga beli -5%</button>
-    <button class="orange" onclick="chooseClass('Petarung')">🗡️ Petarung — ATK dasar +6, HP maksimal +25</button>
-    <button class="purple" onclick="chooseClass('Cendekiawan')">📚 Cendekiawan — LUK +3, EXP +15%</button>
-    <button class="small" style="background:var(--panel-light);" onclick="backToNation()">← Kembali</button>
+    <div class="choice-grid">
+      <button class="teal choice" onclick="chooseClass('Pedagang')">
+        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Joseon:Pedagang"></canvas></span>
+        <span class="choice-body">
+          <b class="choice-name">🧑‍💼 Pedagang</b>
+          <small>Kapasitas +20 · harga beli -5%</small>
+        </span>
+      </button>
+      <button class="orange choice" onclick="chooseClass('Petarung')">
+        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Jepang:Petarung"></canvas></span>
+        <span class="choice-body">
+          <b class="choice-name">🗡️ Petarung</b>
+          <small>ATK dasar +6 · HP maksimal +25</small>
+        </span>
+      </button>
+      <button class="purple choice" onclick="chooseClass('Cendekiawan')">
+        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:China:Cendekiawan"></canvas></span>
+        <span class="choice-body">
+          <b class="choice-name">📚 Cendekiawan</b>
+          <small>LUK +3 · EXP +15%</small>
+        </span>
+      </button>
+    </div>
+    <button class="small" style="background:var(--panel-light); margin-top:8px;" onclick="backToNation()">← Kembali</button>
   </div>
 
   <div id="main-screen" style="display:none;">
-    <div class="panel">
+    <div class="panel hud-stats">
       <div class="statbar">
         <div class="stat"><span>GOLD</span><b id="s-gold">0</b></div>
         <div class="stat"><span>HARI</span><b id="s-day">1</b></div>
@@ -46,7 +94,7 @@
       </div>
     </div>
 
-    <div class="panel" style="display:flex; flex-wrap:wrap; gap:6px; padding:8px;">
+    <div class="panel hud-actions" style="display:flex; flex-wrap:wrap; gap:6px; padding:8px;">
       <button class="teal small" style="margin:0; flex:1 1 40%;" onclick="manualSave()">💾 Simpan</button>
       <button class="purple small" style="margin:0; flex:1 1 40%;" id="mute-btn" onclick="toggleMute()">🔊 Suara</button>
       <button class="blue small" style="margin:0; flex:1 1 40%;" id="music-btn" onclick="toggleMusic()">🎵 Musik</button>
@@ -129,12 +177,12 @@
       <div id="peta-list"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel hud-dest">
       <div class="city-title">Perjalanan Berikutnya</div>
       <div class="destinations" id="dest-list"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel hud-log">
       <div class="city-title">Catatan Perjalanan</div>
       <div class="log" id="log"></div>
     </div>

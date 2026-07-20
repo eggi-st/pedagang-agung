@@ -40,7 +40,10 @@ console.log('[Pedagang Agung] Data modules loaded:', {
   achievements: ACHIEVEMENTS.length,
 });
 
+// Gambar sprite di layar judul dan kartu pilihan negara/kelas.
+paintAllSprites();
+
 document.getElementById('continue-slot').innerHTML =
-  '<div style="font-size:8px; color:var(--dim); padding:8px;">' +
+  '<div style="font-size:var(--fs-micro); color:var(--dim); padding:8px; line-height:1.8;">' +
   '⚠️ Migrasi belum selesai — game logic masih di original-reference.html. ' +
   'Lihat komentar di src/main.js untuk langkah selanjutnya.</div>';
