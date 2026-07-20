@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // LOGIC PERMAINAN — hasil pemindahan Fase 2 dari original-reference.html
 //
 // Isi file ini SENGAJA masih satu modul besar dan identik dengan aslinya.
@@ -23,6 +23,19 @@ import { SPRITE_HUMANOID, SPRITE_MONSTER, SKIN_TONE } from './data/sprites.js';
 import { paintAllSprites, spriteCanvasHTML, drawPixelSprite, playSpriteAnim } from './ui/sprites.js';
 import { sfx, haptic, toggleMute as toggleMuteBase } from './audio/sfx.js';
 import { playMusic, stopMusic, playVictoryJingle, toggleMusic as toggleMusicBase } from './audio/music.js';
+
+// Modul hasil pemecahan Fase 2 lanjutan.
+import { state, battle, dungeonState, setState, setBattle, setDungeonState } from './state.js';
+import { rand } from './core/rng.js';
+import { SAVE_PREFIX, saveGame, loadSavedGame, clearSave, migrateState } from './systems/save.js';
+import {
+  addLog, gainGold, accessoryContribution, currentWeaponAtk, currentArmorDef,
+  getAtk, getDef, reputationBonusPct,
+} from './systems/character.js';
+import {
+  genPrices, genRecruits, genItem, rollDrop, genQuest, genGuildQuest,
+  guildQuestReady, guildQuestLabel, guildQuestProgressNow,
+} from './systems/generators.js';
 
 // Tombol di index.html memanggil toggleMute()/toggleMusic() tanpa argumen,
 // sedangkan versi terekstrak menerima elemen label. Pembungkus tipis ini
@@ -86,27 +99,15 @@ function drawGoldChart(){
   ctx.fillText(`Hari ${maxDay}`, W-padR-32, H-4);
 }
 
-// ---------- STATE GLOBAL ----------
-let state = null;
-let battle = null;
-let dungeonState = null;
+// ---------- STATE LOKAL ALUR LAYAR ----------
+// state/battle/dungeonState sudah pindah ke src/state.js. Yang tersisa di
+// sini hanya milik alur layar yang belum dipecah.
 let eventCallback = null;
 let pendingSlot = 1;
 let pendingNation = null;
 let craftSelection = [];
-const SAVE_PREFIX = 'pedagangAgungSave_slot';
 
-function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
-// ---------- SAVE SYSTEM ----------
-function saveGame(){
-  if(!state) return;
-  try{ localStorage.setItem(SAVE_PREFIX+state.currentSlot, JSON.stringify({ state, dungeonState })); }catch(e){}
-}
-function loadSavedGame(slot){
-  try{ const raw = localStorage.getItem(SAVE_PREFIX+slot); if(!raw) return null; return JSON.parse(raw); }catch(e){ return null; }
-}
-function clearSave(slot){ try{ localStorage.removeItem(SAVE_PREFIX+slot); }catch(e){} }
+// ---------- SAVE (alur layar) ----------
 function manualSave(){ saveGame(); showEvent('💾 Tersimpan', `Progres di Slot ${state.currentSlot} sudah disimpan. Kamu bisa tutup dan lanjut kapan saja.`); }
 function confirmReset(){
   showEvent('🗑 Hapus Progres?', 'Ini akan menghapus save di slot ini dan kembali ke layar awal. Ketuk tombol di bawah untuk konfirmasi.', ()=>{
@@ -142,28 +143,11 @@ function initContinueSlot(){
     slot.innerHTML = '';
   }
 }
-function migrateState(){
-  if(!state) return;
-  if(!state.factory) state.factory = { active:null };
-  if(!state.processedGoods){ state.processedGoods={}; FACTORY_RECIPES.forEach(r=> state.processedGoods[r.id]=0); }
-  if(!state.guildQuest) state.guildQuest = genGuildQuest();
-  if(state.tradePoints===undefined) state.tradePoints = 0;
-  if(state.upgradeParts===undefined) state.upgradeParts = 0;
-  if(state.rebirthStones===undefined) state.rebirthStones = 0;
-  if(state.classTransformed===undefined) state.classTransformed = false;
-  if(state.lastTestTown===undefined) state.lastTestTown = Math.max(0, state.day-7);
-  if(!state.goldHistory) state.goldHistory = [{day: state.day, gold: state.gold}];
-  CITIES.forEach(c=>{
-    if(!state.cityUpgrades[c]) state.cityUpgrades[c] = { gudang:0, benteng:0 };
-    if(state.cityUpgrades[c].benteng===undefined) state.cityUpgrades[c].benteng = 0;
-  });
-  state.generals.forEach(g=>{ if(!g.elem) g.elem = ELEMENTS[rand(0,ELEMENTS.length-1)]; if(g.rebirthBonus===undefined) g.rebirthBonus=0; });
-}
 function continueGame(){
   const saved = loadSavedGame(pendingSlot);
   if(!saved) return;
-  state = saved.state;
-  dungeonState = saved.dungeonState || null;
+  setState(saved.state);
+  setDungeonState(saved.dungeonState || null);
   migrateState();
   document.getElementById('setup-nation').style.display='none';
   document.getElementById('setup-class').style.display='none';
@@ -186,74 +170,6 @@ function chooseClass(className){
   startGame(pendingNation, className, {});
 }
 
-function genPrices(){
-  const p = {};
-  GOODS.forEach(g=>{ p[g.id] = Math.max(3, Math.round(g.base * (0.6 + Math.random()*0.9))); });
-  return p;
-}
-function genRecruits(){
-  const pool = [];
-  for(let i=0;i<2;i++){
-    const name = MERC_NAMES[rand(0,MERC_NAMES.length-1)];
-    const tier = rand(1,3);
-    const elem = ELEMENTS[rand(0,ELEMENTS.length-1)];
-    pool.push({ name: name, maxHp: 20 + tier*15, atk: 4 + tier*4, price: 60 + tier*70, elem });
-  }
-  return pool;
-}
-function genItem(rarity){
-  const type = ['offensive','defensive','balanced'][rand(0,2)];
-  const names = ITEM_TYPE_NAMES[type][rarity];
-  const name = names[rand(0,names.length-1)];
-  const range = RARITY_RANGE[rarity];
-  const bonus = rand(range[0], range[1]);
-  return {uid:'it'+Date.now()+rand(0,9999), name, rarity, type, bonus, sellValue: RARITY_SELL[rarity]+rand(0,20)};
-}
-function rollDrop(luck){
-  const roll = Math.random();
-  if(roll < 0.03+luck*0.015) return genItem('Legendaris');
-  if(roll < 0.15+luck*0.03) return genItem('Langka');
-  if(roll < 0.5+luck*0.05) return genItem('Biasa');
-  return null;
-}
-function genQuest(){
-  const type = Math.random()<0.5 ? 'sell' : 'hunt';
-  if(type==='sell'){
-    const good = GOODS[rand(0,GOODS.length-1)];
-    return { type:'sell', goodId:good.id, goodName:good.name, target: rand(3,6), progress:0, reward: rand(40,90), rewardMedal: rand(0,1), completed:false };
-  }
-  return { type:'hunt', target: rand(1,3), progress:0, reward: rand(50,110), rewardMedal:1, completed:false };
-}
-function genGuildQuest(){
-  const types = ['gold','level','defeat'];
-  const t = types[rand(0,2)];
-  if(t==='gold') return { type:'gold', target: state.gold + rand(300,600), reward: rand(200,350), rewardMedal: rand(3,6) };
-  if(t==='level') return { type:'level', target: state.char.level + rand(2,4), reward: rand(250,400), rewardMedal: rand(3,6) };
-  return { type:'defeat', target: (state.stats.battlesWon||0)+rand(3,6), reward: rand(200,350), rewardMedal: rand(3,6) };
-}
-function guildQuestReady(){
-  const q = state.guildQuest;
-  if(!q) return false;
-  if(q.type==='gold') return state.gold>=q.target;
-  if(q.type==='level') return state.char.level>=q.target;
-  if(q.type==='defeat') return state.stats.battlesWon>=q.target;
-  return false;
-}
-function guildQuestLabel(){
-  const q = state.guildQuest;
-  if(!q) return '';
-  if(q.type==='gold') return `Kumpulkan total ${q.target} gold`;
-  if(q.type==='level') return `Capai Level ${q.target}`;
-  return `Menangkan total ${q.target} pertempuran`;
-}
-function guildQuestProgressNow(){
-  const q = state.guildQuest;
-  if(!q) return 0;
-  if(q.type==='gold') return state.gold;
-  if(q.type==='level') return state.char.level;
-  return state.stats.battlesWon;
-}
-
 function startGame(nation, className, opts){
   opts = opts || {};
   let gold, capMax, str, int, agi, luk;
@@ -268,7 +184,7 @@ function startGame(nation, className, opts){
 
   const baseHp = 60 + str*3 + (cls.hpFlat||0);
 
-  state = {
+  setState({
     nation, className, gold, day:1, maxDay:30,
     city: CITIES[0],
     char: { level:1, exp:0, expMax:100, hp: baseHp, maxHp: baseHp, str, int, agi, luk, classAtkBonus: cls.atkFlat||0 },
@@ -296,7 +212,7 @@ function startGame(nation, className, opts){
     achievements: [],
     currentSlot: pendingSlot,
     log: []
-  };
+  });
   CITIES.forEach(c=>{
     state.prices[c] = genPrices();
     state.recruits[c] = genRecruits();
@@ -315,39 +231,6 @@ function startGame(nation, className, opts){
   playMusic('explore');
   render();
 }
-
-function addLog(msg){
-  state.log.unshift(`Hari ${state.day}: ${msg}`);
-  if(state.log.length>40) state.log.pop();
-}
-function gainGold(amount){
-  state.gold += amount;
-  state.stats.totalGoldEarned += Math.max(0,amount);
-}
-
-function accessoryContribution(){
-  let atk=0, def=0, str=0, agi=0;
-  [state.equipment.accessory1, state.equipment.accessory2].forEach(uid=>{
-    if(!uid) return;
-    const it = state.items.find(i=>i.uid===uid);
-    if(!it) return;
-    if(it.type==='offensive') atk += it.bonus;
-    else if(it.type==='defensive') def += it.bonus;
-    else { atk += Math.round(it.bonus*0.4); def += Math.round(it.bonus*0.4); str+=1; agi+=1; }
-  });
-  return {atk, def, str, agi};
-}
-function currentWeaponAtk(){ return state.equipment.weapon ? WEAPONS.find(w=>w.id===state.equipment.weapon).atk : 0; }
-function currentArmorDef(){ return state.equipment.armor ? ARMORS.find(a=>a.id===state.equipment.armor).def : 0; }
-function getAtk(){
-  const c = state.char;
-  return Math.round((c.str+accessoryContribution().str)*1.5 + currentWeaponAtk() + accessoryContribution().atk + (c.classAtkBonus||0));
-}
-function getDef(){
-  const c = state.char;
-  return Math.round((c.agi+accessoryContribution().agi)*0.5 + currentArmorDef() + accessoryContribution().def);
-}
-function reputationBonusPct(city){ return Math.min(20, Math.floor((state.reputation[city]||0)/5)); }
 
 function switchTab(tab){
   ['trade','shop','party','peta'].forEach(t=>{
@@ -920,7 +803,7 @@ function exchangeTP(id){
 function enterHistoricalScenario(){
   if(state.char.level<10 || (state.tradePoints||0)<40) { sfx('error'); return; }
   state.tradePoints -= 40;
-  dungeonState = { city: state.city, floor:1, maxFloor:1, historical:true };
+  setDungeonState({ city: state.city, floor:1, maxFloor:1, historical:true });
   sfx('dungeon');
   startBattle('historical', state.city);
 }
@@ -1102,7 +985,7 @@ function closeEvent(){
 }
 
 function enterDungeon(city){
-  dungeonState = { city, floor:1, maxFloor:3 };
+  setDungeonState({ city, floor:1, maxFloor:3 });
   sfx('dungeon');
   startDungeonFloor();
 }
@@ -1113,7 +996,7 @@ function testTownAvailable(){ return (state.day - state.lastTestTown) >= 7; }
 function enterTestTown(){
   if(!testTownAvailable()) { sfx('error'); return; }
   state.lastTestTown = state.day;
-  dungeonState = { city: state.city, floor:1, maxFloor:3, testTown:true };
+  setDungeonState({ city: state.city, floor:1, maxFloor:3, testTown:true });
   sfx('dungeon');
   startBattle('testtown', state.city);
 }
@@ -1151,7 +1034,7 @@ function startBattle(context, dest){
     const suffix = enemyCount>1 ? ` ${i+1}` : '';
     enemies.push({ name: m.name+suffix, hp: Math.round(m.hpBase*scale), maxHp: Math.round(m.hpBase*scale), atk: Math.round(m.atkBase*scale), poisonChance: m.poisonChance||0, poison:null, elem: m.elem||null });
   }
-  battle = {
+  setBattle({
     context, dest, isBoss,
     enemies,
     log: [enemyCount>1 ? `Sekelompok musuh menghadangmu!` : `${enemies[0].name} menghadangmu!`],
@@ -1160,7 +1043,7 @@ function startBattle(context, dest){
     warcryTurns: 0,
     playerDefending: false,
     flashTargets: new Set()
-  };
+  });
   document.getElementById('battle-title').textContent = context==='garrison' ? 'PERTEMPURAN GARNISUN' : (context==='historical' ? '🏛️ HISTORICAL SCENARIO' : (context==='testtown' ? `🏟️ TEST TOWN — GAUNTLET ${dungeonState.floor}/${dungeonState.maxFloor}` : (context==='dungeon' ? `DUNGEON — LANTAI ${dungeonState.floor}/${dungeonState.maxFloor}` : 'PERTEMPURAN')));
   renderBattle();
   const bov = document.getElementById('battle-overlay');
@@ -1572,7 +1455,7 @@ function closeBattle(){
   }
 
   if(battle.context==='historical'){
-    dungeonState = null;
+    setDungeonState(null);
     if(won){
       state.upgradeParts = (state.upgradeParts||0)+2;
       const drop = genItem('Legendaris');
@@ -1601,10 +1484,10 @@ function closeBattle(){
         state.stats.testTownCleared = (state.stats.testTownCleared||0)+1;
         const bonusDrop = genItem('Legendaris');
         state.items.push(bonusDrop);
-        showEvent('🏆 Test Town Ditaklukkan!', lootMsg + ` Bonus penuntasan: +1 Upgrade Part dan pusaka ${bonusDrop.name} (Legendaris)!`, ()=>{ dungeonState=null; if(!checkEndConditions()) render(); });
+        showEvent('🏆 Test Town Ditaklukkan!', lootMsg + ` Bonus penuntasan: +1 Upgrade Part dan pusaka ${bonusDrop.name} (Legendaris)!`, ()=>{ setDungeonState(null); if(!checkEndConditions()) render(); });
       }
     } else {
-      showEvent('Gagal di Test Town', 'Gauntlet ini terlalu berat untukmu saat ini. Kesempatan Test Town minggu ini sudah terpakai — coba lagi setelah lebih kuat.', ()=>{ dungeonState=null; if(!checkEndConditions()) render(); });
+      showEvent('Gagal di Test Town', 'Gauntlet ini terlalu berat untukmu saat ini. Kesempatan Test Town minggu ini sudah terpakai — coba lagi setelah lebih kuat.', ()=>{ setDungeonState(null); if(!checkEndConditions()) render(); });
     }
     return;
   }
@@ -1619,10 +1502,10 @@ function closeBattle(){
       if(dungeonState.floor < dungeonState.maxFloor){
         showEvent(`Lantai ${dungeonState.floor} Selesai`, lootMsg + ' Lanjut ke lantai berikutnya?', ()=>{ dungeonState.floor++; startDungeonFloor(); });
       } else {
-        showEvent('🐉 Dungeon Ditaklukkan!', lootMsg + ' Kamu menaklukkan seluruh dungeon dan mendapat 3 medali.', ()=>{ dungeonState=null; if(!checkEndConditions()) render(); });
+        showEvent('🐉 Dungeon Ditaklukkan!', lootMsg + ' Kamu menaklukkan seluruh dungeon dan mendapat 3 medali.', ()=>{ setDungeonState(null); if(!checkEndConditions()) render(); });
       }
     } else {
-      showEvent('Mundur dari Dungeon', 'Kamu gagal mengalahkan monster dan mundur dari dungeon.', ()=>{ dungeonState=null; if(!checkEndConditions()) render(); });
+      showEvent('Mundur dari Dungeon', 'Kamu gagal mengalahkan monster dan mundur dari dungeon.', ()=>{ setDungeonState(null); if(!checkEndConditions()) render(); });
     }
     return;
   }

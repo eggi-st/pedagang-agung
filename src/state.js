@@ -1,12 +1,13 @@
-// STATUS: skeleton. Bentuk `state` didokumentasikan di sini berdasarkan
-// original-reference.html (fungsi startGame()). Logic pembuatan/migrasi
-// state MASIH ada di original-reference.html dan belum dipindah kemari —
-// ini pekerjaan Fase 2 (lihat rencana-migrasi-claude-code.md).
+// STATE RUNTIME PUSAT.
 //
-// Cari fungsi-fungsi berikut di original-reference.html untuk dipindah:
-//   - startGame(nation, className, opts)  -> pembuatan state baru
-//   - migrateState()                       -> migrasi save lama
-//   - saveGame() / loadSavedGame() / clearSave()  -> src/systems/save.js
+// Modul ES memakai live binding: modul lain yang menulis
+// `import { state } from './state.js'` akan otomatis melihat nilai
+// terbaru setiap kali setState() dipanggil. Yang TIDAK bisa dilakukan
+// modul lain adalah menugaskan ulang binding-nya sendiri — karena itu
+// setiap penugasan ulang harus lewat setter di bawah.
+//
+// Mengubah ISI state (state.gold += 10) tetap boleh di mana saja;
+// yang perlu setter hanyalah mengganti seluruh objeknya.
 
 /**
  * @typedef {Object} GameState
@@ -48,8 +49,15 @@
  * @property {string[]} log
  */
 
+/** @type {GameState|null} */
 export let state = null;
 
-export function setState(newState) {
-  state = newState;
-}
+/** Sesi pertempuran yang sedang berlangsung, null kalau tidak bertempur. */
+export let battle = null;
+
+/** Konteks dungeon/test town/skenario, null kalau di kota biasa. */
+export let dungeonState = null;
+
+export function setState(next) { state = next; }
+export function setBattle(next) { battle = next; }
+export function setDungeonState(next) { dungeonState = next; }
