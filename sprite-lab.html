@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1423">
+<title>Sprite Lab — Pedagang Agung</title>
+<link rel="stylesheet" href="/styles/base.css">
+<style>
+  /* Lab butuh lebih lebar dari game (max 480px), jadi dilonggarkan di sini. */
+  #lab{ width:100%; max-width: 900px; min-width:0; }
+  .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap:10px; }
+  .cellbox{ background:#000; border-radius:3px; padding:8px 4px; text-align:center; }
+  .cellbox canvas{ display:block; margin:0 auto 6px; image-rendering: pixelated; }
+  .cellbox .nm{ font-size:6px; color:var(--dim); line-height:1.5; word-break:break-word; }
+  .row{ display:flex; flex-wrap:wrap; gap:6px; }
+  .row button{ width:auto; flex:1 1 120px; margin:0; }
+  .hint{ font-size:6.5px; color:var(--dim); line-height:1.8; margin-bottom:10px; }
+  .stage{ display:flex; justify-content:center; gap:24px; padding:16px 0; background:#000; border-radius:3px; margin-bottom:10px; }
+  .stage canvas{ image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<div id="lab">
+  <h1>SPRITE LAB</h1>
+  <div class="subtitle">pratinjau bentuk &amp; animasi — bukan bagian dari game</div>
+
+  <div class="panel">
+    <div class="city-title">Panggung Uji Animasi</div>
+    <div class="hint">
+      Ketuk tombol untuk memicu animasi. Gerak diam (naik-turun halus) jalan terus
+      dengan fase acak per sprite, jadi sekumpulan sprite tidak bergerak serempak.
+    </div>
+    <div class="stage">
+      <canvas class="sprite-canvas" width="72" height="72" data-sprite="player:Joseon:Petarung"></canvas>
+      <canvas class="sprite-canvas" width="72" height="72" data-sprite="monster:Api:Prajurit Bayaran Jahat"></canvas>
+    </div>
+    <div class="row">
+      <button class="orange" data-anim="attack">⚔ Serang</button>
+      <button class="red" data-anim="hit">💥 Kena</button>
+      <button class="purple" data-anim="cast">✨ Skill</button>
+      <button class="small" style="background:var(--panel-light);" data-anim="defeat">💀 Tumbang</button>
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button class="teal" id="motion-btn">🎬 Animasi: AKTIF</button>
+      <button class="blue" id="size-btn">🔍 Ukuran: 72px</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="city-title">Monster — bentuk per jenis</div>
+    <div class="hint">Warna badan mengikuti elemen; bentuk mengikuti nama monster.</div>
+    <div class="grid" id="grid-monsters"></div>
+  </div>
+
+  <div class="panel">
+    <div class="city-title">Karakter — bentuk per kelas × negara</div>
+    <div class="grid" id="grid-players"></div>
+  </div>
+
+  <div class="panel">
+    <div class="city-title">Jendral — warna per pangkat</div>
+    <div class="grid" id="grid-generals"></div>
+  </div>
+</div>
+<script type="module" src="/src/sprite-lab.js"></script>
+</body>
+</html>
