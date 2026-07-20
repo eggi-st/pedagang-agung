@@ -47,6 +47,17 @@ import {
   battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee,
 } from './systems/battle.js';
 import { renderBattle, hpBarColor } from './ui/battle-ui.js';
+import {
+  craftSelection, toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem,
+} from './systems/inventory.js';
+import {
+  recruitGeneral, moveGeneral, useRebirthStone, promoteCost, promoteGeneral,
+} from './systems/generals.js';
+import {
+  upgradeGudang, upgradeBenteng, enterDungeon, attackGarrison,
+  testTownAvailable, enterTestTown,
+} from './systems/territory.js';
+import { claimQuest, claimGuildQuest } from './systems/quests.js';
 
 // Tombol di index.html memanggil toggleMute()/toggleMusic() tanpa argumen,
 // sedangkan versi terekstrak menerima elemen label. Pembungkus tipis ini
@@ -121,7 +132,6 @@ registerHooks({ render, renderBattle, startBattle, checkEndConditions, endGame }
 let eventCallback = null;
 let pendingSlot = 1;
 let pendingNation = null;
-let craftSelection = [];
 
 // ---------- SAVE (alur layar) ----------
 function manualSave(){ saveGame(); showEvent('💾 Tersimpan', `Progres di Slot ${state.currentSlot} sudah disimpan. Kamu bisa tutup dan lanjut kapan saja.`); }
@@ -489,15 +499,6 @@ function checkAchievements(){
   });
 }
 
-function toggleCraftSelect(uid){
-  const idx = craftSelection.indexOf(uid);
-  if(idx>=0){ craftSelection.splice(idx,1); }
-  else {
-    if(craftSelection.length>=2) craftSelection.shift();
-    craftSelection.push(uid);
-  }
-  render();
-}
 function renderCraftAction(){
   const box = document.getElementById('craft-action');
   if(craftSelection.length!==2){ box.innerHTML=''; return; }
@@ -509,27 +510,6 @@ function renderCraftAction(){
   }
   const nextRarity = RARITY_ORDER[RARITY_ORDER.indexOf(it1.rarity)+1];
   box.innerHTML = `<button class="gold" style="margin-top:8px;" onclick="craftItems()">🔨 Gabungkan jadi item ${nextRarity} (biaya 30g)</button>`;
-}
-function craftItems(){
-  if(craftSelection.length!==2) return;
-  const it1 = state.items.find(i=>i.uid===craftSelection[0]);
-  const it2 = state.items.find(i=>i.uid===craftSelection[1]);
-  if(!it1 || !it2 || it1.rarity!==it2.rarity || it1.rarity==='Legendaris') return;
-  if(state.gold<30){ sfx('error'); return; }
-  state.gold -= 30;
-  const nextRarity = RARITY_ORDER[RARITY_ORDER.indexOf(it1.rarity)+1];
-  [it1.uid, it2.uid].forEach(uid=>{
-    if(state.equipment.accessory1===uid) state.equipment.accessory1=null;
-    if(state.equipment.accessory2===uid) state.equipment.accessory2=null;
-  });
-  state.items = state.items.filter(i=> i.uid!==it1.uid && i.uid!==it2.uid);
-  const newItem = genItem(nextRarity);
-  state.items.push(newItem);
-  state.stats.itemsCrafted = (state.stats.itemsCrafted||0)+1;
-  craftSelection = [];
-  sfx('craft');
-  addLog(`Berhasil crafting: ${newItem.name} (${newItem.rarity})!`);
-  render();
 }
 
 function renderDiagramAction(){
@@ -551,42 +531,7 @@ function renderDiagramAction(){
     box.appendChild(note);
   }
 }
-function craftDiagram(diagramId){
-  const d = DIAGRAMS.find(x=>x.id===diagramId);
-  const legendary = state.items.find(i=>i.rarity==='Legendaris');
-  if(!legendary || state.gold<d.goldCost || state.medals<d.medalCost){ sfx('error'); return; }
-  if(state.equipment.accessory1===legendary.uid) state.equipment.accessory1=null;
-  if(state.equipment.accessory2===legendary.uid) state.equipment.accessory2=null;
-  state.items = state.items.filter(i=>i.uid!==legendary.uid);
-  state.gold -= d.goldCost;
-  state.medals -= d.medalCost;
-  const newItem = { uid:'it'+Date.now()+rand(0,9999), name:d.name, rarity:'Legendaris', type:d.type, bonus:d.bonus, sellValue: 300 };
-  state.items.push(newItem);
-  state.stats.itemsCrafted = (state.stats.itemsCrafted||0)+1;
-  sfx('craft');
-  addLog(`Berhasil menempa pusaka ${d.name} menggunakan Diagram!`);
-  render();
-}
 
-function moveGeneral(idx, dir){
-  const target = idx+dir;
-  if(target<0 || target>=state.generals.length) return;
-  const arr = state.generals;
-  [arr[idx],arr[target]] = [arr[target],arr[idx]];
-  render();
-}
-function useRebirthStone(idx){
-  if((state.rebirthStones||0)<=0) return;
-  const g = state.generals[idx];
-  state.rebirthStones--;
-  g.rebirthBonus = (g.rebirthBonus||0) + 5;
-  g.atk += 5;
-  g.maxHp += 10;
-  g.hp = g.maxHp;
-  sfx('craft');
-  addLog(`${g.name} diperkuat permanen dengan Rebirth Stone (+5 ATK, +10 HP maksimal).`);
-  render();
-}
 
 function renderPeta(){
   const petaList = document.getElementById('peta-list');
@@ -670,62 +615,7 @@ function renderPeta(){
     petaList.appendChild(div);
   });
 }
-function upgradeBenteng(city){
-  const lvl = state.cityUpgrades[city].benteng;
-  const cost = 180*(lvl+1);
-  if(state.gold<cost || lvl>=3) return;
-  state.gold -= cost;
-  state.cityUpgrades[city].benteng++;
-  sfx('buy');
-  addLog(`Benteng di ${city} ditingkatkan ke level ${state.cityUpgrades[city].benteng}, lebih sulit direbut musuh.`);
-  render();
-}
-function claimGuildQuest(){
-  if(!guildQuestReady()) return;
-  const q = state.guildQuest;
-  gainGold(q.reward);
-  state.medals += q.rewardMedal;
-  sfx('quest');
-  addLog(`Misi Guild selesai! +${q.reward}g + ${q.rewardMedal} medali.`);
-  state.guildQuest = genGuildQuest();
-  render();
-}
-function upgradeGudang(city){
-  const lvl = state.cityUpgrades[city].gudang;
-  const cost = 200*(lvl+1);
-  if(state.gold<cost || lvl>=3) return;
-  state.gold -= cost;
-  state.cityUpgrades[city].gudang++;
-  addLog(`Gudang di ${city} ditingkatkan ke level ${state.cityUpgrades[city].gudang}.`);
-  render();
-}
-function claimQuest(city){
-  const q = state.quests[city];
-  if(!q || q.progress<q.target) return;
-  gainGold(q.reward);
-  state.medals += q.rewardMedal;
-  state.reputation[city] = (state.reputation[city]||0) + 5;
-  state.stats.questsCompleted = (state.stats.questsCompleted||0)+1;
-  sfx('quest');
-  addLog(`Misi di ${city} selesai! +${q.reward}g${q.rewardMedal?' + '+q.rewardMedal+' medali':''}, reputasi +5.`);
-  state.quests[city] = genQuest();
-  render();
-}
 
-function promoteCost(g){
-  const parts = g.rank>=3 ? (g.rank-2) : 0;
-  return { gold: 100 + (g.rank+1)*150, medals: (g.rank+1), parts };
-}
-function promoteGeneral(idx){
-  const g = state.generals[idx];
-  const cost = promoteCost(g);
-  if(state.gold<cost.gold || state.medals<cost.medals || (state.upgradeParts||0)<cost.parts || g.rank>=RANK_NAMES.length-1) return;
-  state.gold -= cost.gold; state.medals -= cost.medals; state.upgradeParts -= cost.parts;
-  g.rank++; g.maxHp += 20; g.hp = g.maxHp; g.atk += 8;
-  sfx('levelup');
-  addLog(`${g.name} dipromosikan menjadi ${RANK_NAMES[g.rank]}!`);
-  render();
-}
 
 function renderFactory(){
   const statusDiv = document.getElementById('factory-status');
@@ -784,36 +674,6 @@ function renderEliteNPC(){
   box.appendChild(hsRow);
 }
 
-function recruitGeneral(idx){
-  const m = state.recruits[state.city][idx];
-  if(state.gold<m.price || state.generals.length>=MAX_GENERALS) { sfx('error'); return; }
-  state.gold -= m.price;
-  state.generals.push({name:m.name, rank:0, maxHp:m.maxHp, hp:m.maxHp, atk:m.atk, elem:m.elem});
-  state.recruits[state.city].splice(idx,1);
-  sfx('buy');
-  addLog(`Merekrut ${m.name} sebagai Prajurit ke dalam pasukan.`);
-  render();
-}
-function equipAccessory(uid, slotNum){
-  const key = slotNum===1 ? 'accessory1' : 'accessory2';
-  const other = slotNum===1 ? 'accessory2' : 'accessory1';
-  if(state.equipment[other]===uid) state.equipment[other] = null;
-  state.equipment[key] = uid;
-  render();
-}
-function sellItem(uid){
-  const idx = state.items.findIndex(i=>i.uid===uid);
-  if(idx<0) return;
-  const it = state.items[idx];
-  gainGold(it.sellValue);
-  if(state.equipment.accessory1===uid) state.equipment.accessory1 = null;
-  if(state.equipment.accessory2===uid) state.equipment.accessory2 = null;
-  state.items.splice(idx,1);
-  craftSelection = craftSelection.filter(u=>u!==uid);
-  sfx('sell');
-  addLog(`Menjual ${it.name} seharga ${it.sellValue}g.`);
-  render();
-}
 
 
 function checkEndConditions(){
@@ -822,21 +682,7 @@ function checkEndConditions(){
 }
 
 
-function enterDungeon(city){
-  setDungeonState({ city, floor:1, maxFloor:3 });
-  sfx('dungeon');
-  startDungeonFloor();
-}
-function attackGarrison(city){ startBattle('garrison', city); }
 
-function testTownAvailable(){ return (state.day - state.lastTestTown) >= 7; }
-function enterTestTown(){
-  if(!testTownAvailable()) { sfx('error'); return; }
-  state.lastTestTown = state.day;
-  setDungeonState({ city: state.city, floor:1, maxFloor:3, testTown:true });
-  sfx('dungeon');
-  startBattle('testtown', state.city);
-}
 
 
 
