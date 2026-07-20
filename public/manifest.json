@@ -2,13 +2,14 @@
   "name": "Pedagang Agung",
   "short_name": "Pedagang Agung",
   "description": "8-bit trading & adventure — terinspirasi Xian: The Great Merchant",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#1a1423",
   "theme_color": "#1a1423",
   "orientation": "portrait",
   "icons": [
-    { "src": "/public/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/public/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
