@@ -1,0 +1,16 @@
+{
+  "name": "pedagang-agung",
+  "version": "0.1.0",
+  "description": "8-bit trading & adventure game — terinspirasi Xian: The Great Merchant",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

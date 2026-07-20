@@ -1,0 +1,4 @@
+# Normalkan line ending supaya diff tidak berisik saat pindah OS
+* text=auto eol=lf
+*.png binary
+*.zip binary

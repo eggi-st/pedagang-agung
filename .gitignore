@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+
+# Arsip duplikat folder ini — bukan sumber kebenaran
+pedagang-agung-project.zip
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.log

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1423">
+<title>Pedagang Agung — 8-Bit Trading &amp; Adventure</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="/styles/base.css">
+</head>
+<body>
+<div id="game">
+  <h1>⚔ PEDAGANG AGUNG ⚔</h1>
+  <div class="subtitle">8-bit trading & adventure — terinspirasi Xian: The Great Merchant</div>
+
+  <div id="setup-nation" class="panel">
+    <div class="city-title">Pilih Slot Simpanan</div>
+    <div class="slot-row" id="slot-row"></div>
+    <div id="continue-slot"></div>
+    <div class="city-title">Pilih Negara Asal</div>
+    <button class="green" onclick="chooseNation('Joseon')">🇰🇷 Joseon — 500 gold, STR tinggi, jalur aman</button>
+    <button class="gold" onclick="chooseNation('China')">🇨🇳 China — 350 gold, INT tinggi, harga barang murah</button>
+    <button class="red" onclick="chooseNation('Jepang')">🇯🇵 Jepang — 300 gold, AGI & LUK tinggi</button>
+  </div>
+
+  <div id="setup-class" class="panel" style="display:none;">
+    <div class="city-title">Pilih Kelas Karakter</div>
+    <button class="teal" onclick="chooseClass('Pedagang')">🧑‍💼 Pedagang — Kapasitas +20, harga beli -5%</button>
+    <button class="orange" onclick="chooseClass('Petarung')">🗡️ Petarung — ATK dasar +6, HP maksimal +25</button>
+    <button class="purple" onclick="chooseClass('Cendekiawan')">📚 Cendekiawan — LUK +3, EXP +15%</button>
+    <button class="small" style="background:var(--panel-light);" onclick="backToNation()">← Kembali</button>
+  </div>
+
+  <div id="main-screen" style="display:none;">
+    <div class="panel">
+      <div class="statbar">
+        <div class="stat"><span>GOLD</span><b id="s-gold">0</b></div>
+        <div class="stat"><span>HARI</span><b id="s-day">1</b></div>
+        <div class="stat hp"><span>HP</span><b id="s-hp">0</b>/<span id="s-maxhp">0</span></div>
+        <div class="stat blue"><span>LEVEL</span><b id="s-level">1</b></div>
+        <div class="stat teal"><span>MEDALI</span><b id="s-medals">0</b></div>
+        <div class="stat orange"><span>TP</span><b id="s-tp">0</b></div>
+        <div class="stat"><span>KAPASITAS</span><b id="s-cap">0</b>/<span id="s-capmax">50</span></div>
+      </div>
+    </div>
+
+    <div class="panel" style="display:flex; flex-wrap:wrap; gap:6px; padding:8px;">
+      <button class="teal small" style="margin:0; flex:1 1 40%;" onclick="manualSave()">💾 Simpan</button>
+      <button class="purple small" style="margin:0; flex:1 1 40%;" id="mute-btn" onclick="toggleMute()">🔊 Suara</button>
+      <button class="blue small" style="margin:0; flex:1 1 40%;" id="music-btn" onclick="toggleMusic()">🎵 Musik</button>
+      <button class="orange small" style="margin:0; flex:1 1 40%;" onclick="confirmFinishJourney()">🏁 Selesaikan Perjalanan</button>
+      <button class="red small" style="margin:0; flex:1 1 40%;" onclick="confirmReset()">🗑 Reset</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-trade" onclick="switchTab('trade')">Dagang</button>
+      <button class="tab-btn" id="tab-shop" onclick="switchTab('shop')">Toko</button>
+      <button class="tab-btn" id="tab-party" onclick="switchTab('party')">Karakter</button>
+      <button class="tab-btn" id="tab-peta" onclick="switchTab('peta')">Peta</button>
+    </div>
+
+    <div id="panel-trade" class="panel">
+      <div class="city-title" id="city-name-trade">Kota: -</div>
+      <div id="goods-list"></div>
+    </div>
+
+    <div id="panel-shop" class="panel" style="display:none;">
+      <div class="city-title">⚒ Pandai Besi — Senjata</div>
+      <div id="weapon-list"></div>
+      <div class="city-title" style="margin-top:10px;">⚒ Pandai Besi — Zirah</div>
+      <div id="armor-list"></div>
+      <div class="city-title" style="margin-top:10px;">🧪 Ramuan</div>
+      <div id="potion-list"></div>
+      <div class="city-title" style="margin-top:10px;">🛡 Rekrut Jendral</div>
+      <div id="recruit-list"></div>
+      <div class="city-title" style="margin-top:10px;">🏭 Pabrik Produksi</div>
+      <div id="factory-status"></div>
+      <div id="factory-recipes"></div>
+      <div class="city-title" style="margin-top:6px; font-size:9px;">Barang Olahan Siap Jual</div>
+      <div id="processed-list"></div>
+      <div class="city-title" style="margin-top:10px;">💎 NPC Dagang Elit (tukar Trade Point)</div>
+      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Trade Point (TP) didapat tiap kamu jual barang. Tukar TP di sini untuk barang eksklusif.</div>
+      <div id="elite-npc-list"></div>
+    </div>
+
+    <div id="panel-party" class="panel" style="display:none;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+        <div class="icon-box lg player" id="player-avatar"><canvas class="sprite-canvas" id="player-avatar-canvas" width="40" height="40"></canvas></div>
+        <div>
+          <div style="color:var(--gold); font-size:10px;" id="player-name-label">Pedagang</div>
+          <div style="color:var(--dim); font-size:7px;" id="player-nation-label">-</div>
+        </div>
+      </div>
+      <div class="city-title">Status Karakter</div>
+      <div class="statbar">
+        <div class="stat"><span>STR</span><b id="s-str">0</b></div>
+        <div class="stat"><span>INT</span><b id="s-int">0</b></div>
+        <div class="stat"><span>AGI</span><b id="s-agi">0</b></div>
+        <div class="stat orange"><span>LUK</span><b id="s-luk">0</b></div>
+        <div class="stat"><span>ATK</span><b id="s-atk">0</b></div>
+        <div class="stat"><span>DEF</span><b id="s-def">0</b></div>
+        <div class="stat"><span>EXP</span><b id="s-exp">0</b>/<span id="s-expmax">0</span></div>
+      </div>
+      <div class="city-title" style="margin-top:8px;">Equipment</div>
+      <div class="equip-slot"><span>Senjata</span><b id="eq-weapon">Kosong</b></div>
+      <div class="equip-slot"><span>Zirah</span><b id="eq-armor">Kosong</b></div>
+      <div class="equip-slot"><span>Aksesoris 1</span><b id="eq-acc1">Kosong</b></div>
+      <div class="equip-slot"><span>Aksesoris 2</span><b id="eq-acc2">Kosong</b></div>
+      <div class="equip-slot"><span>Ramuan Simpanan</span><b id="eq-potion">0</b></div>
+      <div class="city-title" style="margin-top:8px;">Gudang Senjata &amp; Zirah</div>
+      <div id="gear-inventory"></div>
+      <div class="city-title" style="margin-top:8px;">Tas Barang Rampasan</div>
+      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Ketuk "Pilih" pada 2 item rarity sama untuk crafting jadi item rarity lebih tinggi.</div>
+      <div id="item-list"></div>
+      <div id="craft-action"></div>
+      <div class="city-title" style="margin-top:10px;">📜 Diagram Pusaka</div>
+      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Tukar 1 item Legendaris + gold + medali jadi pusaka tetap yang jauh lebih kuat.</div>
+      <div id="diagram-action"></div>
+      <div class="city-title" style="margin-top:8px;">Pasukan Jendral (formasi: atas = garda depan)</div>
+      <div id="merc-list"></div>
+      <div class="city-title" style="margin-top:8px;">🏆 Pencapaian</div>
+      <div id="ach-list"></div>
+    </div>
+
+    <div id="panel-peta" class="panel" style="display:none;">
+      <div class="city-title">🗺 Peta Wilayah</div>
+      <div id="peta-list"></div>
+    </div>
+
+    <div class="panel">
+      <div class="city-title">Perjalanan Berikutnya</div>
+      <div class="destinations" id="dest-list"></div>
+    </div>
+
+    <div class="panel">
+      <div class="city-title">Catatan Perjalanan</div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div id="end-screen" class="panel" style="display:none;">
+    <h2 id="end-title">TAMAT</h2>
+    <p id="end-desc"></p>
+    <div id="end-stats" style="text-align:left; font-size:8px; color:var(--dim); margin-bottom:12px;"></div>
+    <div class="city-title" style="font-size:9px;">📈 Gold Sepanjang Perjalanan</div>
+    <canvas id="gold-chart" width="380" height="140" style="width:100%; height:auto; background:#000; border-radius:4px; margin-bottom:12px;"></canvas>
+    <button class="gold" id="ngplus-btn" style="display:none;" onclick="startNewGamePlus()">✨ Mulai New Game+</button>
+    <button class="green" onclick="location.reload()">Main Lagi (Slot Sama)</button>
+  </div>
+</div>
+
+<div id="event-overlay">
+  <div class="panel">
+    <div class="event-title" id="event-title">EVENT</div>
+    <div id="event-desc" style="margin-bottom:12px; line-height:1.7;"></div>
+    <button class="gold" onclick="closeEvent()">Lanjutkan</button>
+  </div>
+</div>
+
+<div id="battle-overlay">
+  <div class="panel">
+    <div class="event-title" id="battle-title">PERTEMPURAN</div>
+    <div class="battle-actors" id="battle-actors"></div>
+    <div class="battle-log" id="battle-log"></div>
+    <div class="battle-actions" id="battle-actions"></div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
