@@ -18,6 +18,11 @@
   .hint{ font-size:6.5px; color:var(--dim); line-height:1.8; margin-bottom:10px; }
   .stage{ display:flex; justify-content:center; gap:24px; padding:16px 0; background:#000; border-radius:3px; margin-bottom:10px; }
   .stage canvas{ image-rendering: pixelated; }
+  .compare{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
+  .compare .cellbox{ padding:14px 6px; }
+  .compare canvas{ width:96px; height:96px; }
+  .compare .nm{ font-size:7px; margin-top:8px; }
+  .compare .nm b{ color:var(--gold); display:block; margin-bottom:3px; font-size:8px; }
 </style>
 </head>
 <body>
@@ -44,6 +49,20 @@
     <div class="row" style="margin-top:6px;">
       <button class="teal" id="motion-btn">🎬 Animasi: AKTIF</button>
       <button class="blue" id="size-btn">🔍 Ukuran: 72px</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="city-title">Perbandingan Gaya — mana yang layak dibayar?</div>
+    <div class="hint">
+      Sprite yang sama dalam tiga gaya. Bayangan TIDAK digambar tangan —
+      mesin menghitungnya dari warna dasar, jadi pewarnaan per elemen tetap
+      jalan (coba ganti elemennya di bawah). Lihat dulu, baru putuskan.
+    </div>
+    <div class="compare" id="compare-row"></div>
+    <div class="row" style="margin-top:10px;">
+      <span class="row-name">Warna elemen</span>
+      <span id="elem-btns" style="display:flex; gap:4px; flex-wrap:wrap;"></span>
     </div>
   </div>
 

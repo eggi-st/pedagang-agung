@@ -3,6 +3,7 @@ import {
   SPRITE_MONSTER,
   MONSTER_SPRITE,
   CLASS_SPRITE,
+  DEMO_SPRITE,
   SKIN_TONE,
   PROP_COLOR,
   PACK_COLOR,
@@ -58,6 +59,42 @@ export function drawPixelSprite(canvas, template, colors, opts = {}) {
   ctx.globalAlpha = 1;
 }
 
+// ---------- WARNA TURUNAN ----------
+
+const OUTLINE = '#120d19';
+
+/**
+ * Menggeser warna terang/gelap. f < 1 menggelapkan, f > 1 mencampur ke putih.
+ * Dipakai untuk membuat bayangan sprite TANPA menggambarnya — sehingga
+ * pewarnaan dinamis per elemen/negara/pangkat tetap bekerja seperti semula.
+ */
+export function shade(hex, f) {
+  const m = /^#([0-9a-f]{6})$/i.exec(String(hex));
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const out = f <= 1 ? v * f : v + (255 - v) * (f - 1);
+    return Math.max(0, Math.min(255, Math.round(out)));
+  });
+  return '#' + ch.map((v) => v.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Melengkapi peta warna dengan varian turunan:
+ *   huruf BESAR = warna dasar   (mis. 'M')
+ *   huruf kecil = bayangan      (mis. 'm', otomatis 38% lebih gelap)
+ *   'K'         = garis luar    (tetap, mendekati hitam)
+ * Template lama yang hanya memakai huruf besar tidak terpengaruh.
+ */
+function withShades(colors) {
+  const out = { K: OUTLINE, ...colors };
+  for (const [key, val] of Object.entries(colors)) {
+    const low = key.toLowerCase();
+    if (low !== key && out[low] === undefined) out[low] = shade(val, 0.62);
+  }
+  return out;
+}
+
 /** Menerjemahkan atribut data-sprite jadi {template, colors}. */
 function resolveSprite(spec) {
   const parts = String(spec).split(':');
@@ -68,36 +105,36 @@ function resolveSprite(spec) {
   if (kind === 'player') {
     return {
       template: CLASS_SPRITE[shapeKey] || SPRITE_HUMANOID,
-      colors: {
+      colors: withShades({
         H: '#2a1a0a',
         S: SKIN_TONE,
         B: NATION_BODY_COLOR[colorKey] || '#4a90d9',
         A: '#f4c542',
         W: shapeKey === 'Pedagang' ? PACK_COLOR : PROP_COLOR,
-      },
+      }),
     };
   }
 
   if (kind === 'general') {
     return {
       template: CLASS_SPRITE[shapeKey] || SPRITE_HUMANOID,
-      colors: {
+      colors: withShades({
         H: '#2a1a0a',
         S: SKIN_TONE,
         B: RANK_BODY_COLOR[parseInt(colorKey, 10)] || '#9788b8',
         A: '#ede4ff',
         W: PROP_COLOR,
-      },
+      }),
     };
   }
 
   return {
-    template: MONSTER_SPRITE[shapeKey] || SPRITE_MONSTER,
-    colors: {
+    template: MONSTER_SPRITE[shapeKey] || DEMO_SPRITE[shapeKey] || SPRITE_MONSTER,
+    colors: withShades({
       M: ELEMENT_BODY_COLOR[colorKey] || '#7a2a2a',
       E: '#1a1423',
       W: PROP_COLOR,
-    },
+    }),
   };
 }
 

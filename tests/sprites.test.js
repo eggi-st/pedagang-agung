@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { computeFrame, drawPixelSprite, setSpriteMotion } from '../src/ui/sprites.js';
+import { computeFrame, drawPixelSprite, setSpriteMotion, shade } from '../src/ui/sprites.js';
 import {
   SPRITE_MONSTER,
   SPRITE_HUMANOID,
   MONSTER_SPRITE,
   CLASS_SPRITE,
+  DEMO_SPRITE,
 } from '../src/data/sprites.js';
 
 // State sprite tiruan — bentuknya harus sama dengan yang dibuat paintSpriteCanvas.
@@ -168,10 +169,44 @@ describe('computeFrame — saat animasi dimatikan', () => {
   });
 });
 
+describe('shade — warna turunan', () => {
+  it('menggelapkan warna secara proporsional', () => {
+    // 79,209,197 x 0,62 -> 49,130,122
+    expect(shade('#4fd1c5', 0.62)).toBe('#31827a');
+  });
+
+  it('mencampur ke putih saat faktor di atas 1', () => {
+    const terang = shade('#4fd1c5', 1.4);
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(terang.slice(i, i + 2), 16));
+    expect(r).toBeGreaterThan(0x4f);
+    expect(g).toBeGreaterThan(0xd1);
+    expect(b).toBeGreaterThan(0xc5);
+  });
+
+  it('tidak pernah keluar dari rentang 0-255', () => {
+    expect(shade('#ffffff', 2)).toBe('#ffffff');
+    expect(shade('#000000', 0)).toBe('#000000');
+  });
+
+  it('mengembalikan nilai asli kalau bukan hex 6 digit', () => {
+    expect(shade('bukan-warna', 0.5)).toBe('bukan-warna');
+    expect(shade('#abc', 0.5)).toBe('#abc');
+  });
+
+  // Inilah alasan bayangan dihitung, bukan digambar: satu template
+  // melayani semua elemen dan bayangannya ikut berubah sendiri.
+  it('warna dasar berbeda menghasilkan bayangan berbeda', () => {
+    const api = shade('#e0523f', 0.62);
+    const air = shade('#4a90d9', 0.62);
+    expect(api).not.toBe(air);
+  });
+});
+
 describe('data template sprite', () => {
   const semua = Object.entries({
     ...Object.fromEntries(Object.entries(MONSTER_SPRITE).map(([k, v]) => [`monster:${k}`, v])),
     ...Object.fromEntries(Object.entries(CLASS_SPRITE).map(([k, v]) => [`kelas:${k}`, v])),
+    ...Object.fromEntries(Object.entries(DEMO_SPRITE).map(([k, v]) => [`demo:${k}`, v])),
     'fallback:humanoid': SPRITE_HUMANOID,
     'fallback:monster': SPRITE_MONSTER,
   });

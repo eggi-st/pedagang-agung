@@ -237,6 +237,55 @@ export const SPRITE_GARRISON = [
   '.MMM....MMM.',
 ];
 
+// ---------- PEMBANDING GAYA (khusus sprite-lab) ----------
+//
+// Tiga versi serigala untuk menilai dengan mata, bukan dengan argumen:
+// datar 12x12 (gaya sekarang), 12x12 berbayang, dan 16x16 berbayang.
+//
+// Konvensi baru: huruf BESAR = warna dasar, huruf kecil = bayangan
+// (dihitung otomatis oleh mesin render, TIDAK digambar tangan — jadi
+// pewarnaan dinamis per elemen tetap jalan), 'K' = garis luar.
+
+export const SPRITE_WOLF_SHADED = [
+  '.KK......KK.',
+  '.KMK....KMK.',
+  '..KMMMMMMK..',
+  '.KMEMMMMEMK.',
+  '.KMMMMMMMmK.',
+  'KMMMMMMMMmmK',
+  'KMMMMMMMmmmK',
+  '.KMMMMMmmmK.',
+  '..KMMmmmmK..',
+  '..M..MM..m..',
+  '..M..MM..m..',
+  '.KK..KK..KK.',
+];
+
+export const SPRITE_WOLF_HD = [
+  '..KK........KK..',
+  '..KMK......KMK..',
+  '..KMMK....KMMK..',
+  '...KMMMMMMMMK...',
+  '..KMMMMMMMMMMK..',
+  '.KMMEMMMMMMEMMK.',
+  '.KMMMMMMMMMMMmK.',
+  'KMMMMMMMMMMMMmmK',
+  'KMMMMMMMMMMMmmmK',
+  'KMMMMMMMMMMmmmmK',
+  '.KMMMMMMMMmmmmK.',
+  '..KMMMMMMmmmmK..',
+  '...KMMMMMMmmmK..',
+  '...MM.....mm....',
+  '...MM.....mm....',
+  '..KKKK...KKKK...',
+];
+
+export const DEMO_SPRITE = {
+  'demo-datar': SPRITE_WOLF,
+  'demo-bayang': SPRITE_WOLF_SHADED,
+  'demo-hd': SPRITE_WOLF_HD,
+};
+
 // ---------- PEMETAAN ----------
 
 // Nama monster (dari data/monsters.js) -> template bentuknya.

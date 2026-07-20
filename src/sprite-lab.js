@@ -18,6 +18,34 @@ function cell(html, label) {
   return `<div class="cellbox">${html}<div class="nm">${label}</div></div>`;
 }
 
+const VARIAN = [
+  { key: 'demo-datar',  judul: '12×12 datar',    ket: 'gaya sekarang — 1 warna badan' },
+  { key: 'demo-bayang', judul: '12×12 berbayang', ket: 'garis luar + bayangan otomatis' },
+  { key: 'demo-hd',     judul: '16×16 berbayang', ket: '78% lebih banyak sel' },
+];
+
+let elemAktif = 'Angin';
+
+function renderCompare() {
+  document.getElementById('compare-row').innerHTML = VARIAN.map((v) =>
+    `<div class="cellbox">${spriteCanvasHTML('monster', elemAktif, 96, v.key)}` +
+    `<div class="nm"><b>${v.judul}</b>${v.ket}</div></div>`,
+  ).join('');
+
+  document.getElementById('elem-btns').innerHTML = ELEMENTS.map((e) =>
+    `<button class="mini-btn ${e === elemAktif ? 'gold' : ''}" data-elem="${e}">${e}</button>`,
+  ).join('');
+
+  paintAllSprites(document.getElementById('compare-row'));
+}
+
+document.getElementById('elem-btns').addEventListener('click', (ev) => {
+  const el = ev.target.closest('[data-elem]');
+  if (!el) return;
+  elemAktif = el.getAttribute('data-elem');
+  renderCompare();
+});
+
 function renderGrids() {
   const all = [...MONSTERS, ...DUNGEON_MONSTERS, { name: 'Pasukan Garnisun', elem: 'Bumi' }];
 
@@ -72,6 +100,7 @@ sizeBtn.addEventListener('click', () => {
   paintAllSprites();
 });
 
+renderCompare();
 renderGrids();
 
 // Elemen dipakai buat nge-cek cepat kalau nanti ada elemen baru ditambahkan.
