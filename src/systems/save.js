@@ -48,6 +48,7 @@ export function migrateState() {
   if (state.classTransformed === undefined) state.classTransformed = false;
   if (state.lastTestTown === undefined) state.lastTestTown = Math.max(0, state.day - 7);
   if (!state.goldHistory) state.goldHistory = [{ day: state.day, gold: state.gold }];
+  if (!state.playerName) state.playerName = 'Saudagar Kelana'; // save lama tanpa nama
   // Save lama belum punya baseline harga: pakai harga saat ini sebagai patokan.
   if (!state.basePrices) state.basePrices = {};
   CITIES.forEach((c) => {

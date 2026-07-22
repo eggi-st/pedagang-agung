@@ -62,8 +62,9 @@ export function render(){
   document.getElementById('city-name-trade').textContent = `Kota: ${state.city}`;
   drawPixelSprite(document.getElementById('player-avatar-canvas'), SPRITE_HUMANOID, { H:'#2a1a0a', S:SKIN_TONE, B: NATION_BODY_COLOR[state.nation]||'#4a90d9', A:'#f4c542' });
   const displayClassName = (state.classTransformed && CLASS_TRANSFORMS[state.className]) ? CLASS_TRANSFORMS[state.className].title : (state.className||'Pedagang');
-  document.getElementById('player-name-label').textContent = `${displayClassName} Lv${c.level}`;
-  document.getElementById('player-nation-label').textContent = `Asal: ${state.nation}`;
+  // Nama pemain jadi identitas utama; kelas · negara jadi sub-label.
+  document.getElementById('player-name-label').textContent = `${state.playerName || 'Saudagar'} · Lv${c.level}`;
+  document.getElementById('player-nation-label').textContent = `${displayClassName} · ${state.nation}`;
 
   document.getElementById('eq-weapon').textContent = state.equipment.weapon ? WEAPONS.find(w=>w.id===state.equipment.weapon).name : 'Kosong';
   document.getElementById('eq-armor').textContent = state.equipment.armor ? ARMORS.find(a=>a.id===state.equipment.armor).name : 'Kosong';
@@ -180,7 +181,10 @@ export function render(){
 
   const itemList = document.getElementById('item-list');
   itemList.innerHTML = state.items.length===0 ? '<div style="color:var(--dim); font-size:8px;">Belum ada barang rampasan.</div>' : '';
-  state.items.forEach(it=>{
+  // Tampilkan terurut per rarity (Legendaris dulu) agar tas lebih jelas dibaca.
+  // Salinan supaya urutan asli state.items (dipakai indeks lain) tak berubah.
+  const itemsTampil = [...state.items].sort((a,b)=> RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity));
+  itemsTampil.forEach(it=>{
     const slot = state.equipment.accessory1===it.uid ? 1 : (state.equipment.accessory2===it.uid ? 2 : 0);
     const selected = craftSelection.includes(it.uid);
     const row = document.createElement('div');

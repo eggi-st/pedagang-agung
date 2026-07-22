@@ -109,7 +109,15 @@ function backToNation(){
   document.getElementById('setup-nation').style.display='block';
 }
 function chooseClass(className){
-  startGame(pendingNation, className, {});
+  const nameEl = document.getElementById('player-name-input');
+  const playerName = nameEl ? nameEl.value : '';
+  startGame(pendingNation, className, { playerName });
+}
+
+/** Membersihkan & membatasi nama input; kosong -> nama default bertema. */
+function cleanPlayerName(raw){
+  const nm = (raw || '').replace(/\s+/g, ' ').trim().slice(0, 14);
+  return nm || 'Saudagar Kelana';
 }
 
 function startGame(nation, className, opts){
@@ -127,7 +135,7 @@ function startGame(nation, className, opts){
   const baseHp = 60 + str*3 + (cls.hpFlat||0);
 
   setState({
-    nation, className, gold, day:1, maxDay:30,
+    nation, className, playerName: cleanPlayerName(opts.playerName), gold, day:1, maxDay:30,
     city: CITIES[0],
     char: { level:1, exp:0, expMax:100, hp: baseHp, maxHp: baseHp, str, int, agi, luk, classAtkBonus: cls.atkFlat||0 },
     classDiscountPct: cls.discountPct||0,
@@ -168,7 +176,7 @@ function startGame(nation, className, opts){
   state.guildQuest = genGuildQuest();
   GOODS.forEach(g=> state.inventory[g.id]=0);
 
-  addLog(`Kamu memulai perjalanan sebagai ${className} dari ${nation} di kota ${state.city}.${state.ngPlus>0 ? ' (New Game+ Lv'+state.ngPlus+')' : ''}`);
+  addLog(`${state.playerName}, ${className} dari ${nation}, memulai perjalanan di kota ${state.city}.${state.ngPlus>0 ? ' (New Game+ Lv'+state.ngPlus+')' : ''}`);
   document.getElementById('setup-nation').style.display='none';
   document.getElementById('setup-class').style.display='none';
   document.getElementById('main-screen').style.display='block';
@@ -181,13 +189,14 @@ function startNewGamePlus(){
   const ngPlus = (state.ngPlus||0)+1;
   const nation = state.nation;
   const className = state.className;
+  const playerName = state.playerName;
   const slot = state.currentSlot;
   document.getElementById('end-screen').style.display='none';
   document.getElementById('setup-nation').style.display='none';
   document.getElementById('setup-class').style.display='none';
   document.getElementById('main-screen').style.display='block';
   pendingSlot = slot;
-  startGame(nation, className, { ngPlus, goldCarry });
+  startGame(nation, className, { ngPlus, goldCarry, playerName });
 }
 
 renderSlotRow();

@@ -104,9 +104,10 @@ export function endGame(timeUp, forcedMsg){
     Pencapaian terbuka: ${state.achievements.length}/${ACHIEVEMENTS.length}
   `;
   drawGoldChart();
+  const nama = state.playerName || 'Saudagar';
   if(forcedMsg){
     title.textContent = 'GAME OVER';
-    desc.textContent = forcedMsg + ` Total gold akhir: ${state.gold}, Level ${state.char.level}.`;
+    desc.textContent = `${nama} — ` + forcedMsg + ` Total gold akhir: ${state.gold}, Level ${state.char.level}.`;
     document.getElementById('ngplus-btn').style.display='none';
   } else {
     let rank = 'Pedagang Kaki Lima';
@@ -114,7 +115,7 @@ export function endGame(timeUp, forcedMsg){
     else if(state.gold>=1500) rank='Saudagar Kaya Raya';
     else if(state.gold>=800) rank='Pedagang Sukses';
     title.textContent = `PERJALANAN BERAKHIR (Hari ${state.day})`;
-    desc.textContent = `Total gold akhir: ${state.gold}. Level ${state.char.level}. Gelar kamu: ${rank}.`;
+    desc.textContent = `Total gold akhir: ${state.gold}. Level ${state.char.level}. Gelar ${nama}: ${rank}.`;
     document.getElementById('ngplus-btn').style.display='block';
   }
 }

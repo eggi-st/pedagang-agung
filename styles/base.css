@@ -159,6 +159,19 @@ button.choice{
 .choice-name{ display:block; font-size:var(--fs-small); margin-bottom:4px; }
 .choice-body small{ display:block; font-size:var(--fs-micro); opacity:0.82; line-height:1.7; }
 
+/* Input nama saudagar di layar setup. */
+.name-entry{ margin-bottom:6px; }
+.name-entry input{
+  font-family: inherit; font-size: var(--fs-small); width:100%;
+  color: var(--gold); background: var(--sunken);
+  border: 2px solid var(--panel-light); border-radius:3px;
+  padding: 12px 10px; min-height: var(--tap);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4);
+}
+.name-entry input::placeholder{ color: var(--dim); }
+.name-entry input:focus{ outline: 2px solid var(--gold); outline-offset:1px; }
+.name-entry small{ display:block; color: var(--dim); font-size: var(--fs-micro); margin-top:5px; line-height:1.7; }
+
 /* Barisan sprite dekoratif di layar judul. */
 .parade{
   display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
