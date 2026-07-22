@@ -139,7 +139,7 @@ function startGame(nation, className, opts){
     items: [],
     inventory: {},
     cap:0, capMax,
-    prices: {}, recruits: {},
+    prices: {}, basePrices: {}, recruits: {},
     owned: [], medals: 0,
     reputation: {}, cityUpgrades: {}, quests: {},
     factory: { active: null }, processedGoods: {},
@@ -157,6 +157,8 @@ function startGame(nation, className, opts){
   });
   CITIES.forEach(c=>{
     state.prices[c] = genPrices();
+    // Baseline = harga awal kota ini; harga akan pulih ke sini seiring hari.
+    state.basePrices[c] = { ...state.prices[c] };
     state.recruits[c] = genRecruits();
     state.reputation[c] = 0;
     state.cityUpgrades[c] = { gudang: 0, benteng: 0 };

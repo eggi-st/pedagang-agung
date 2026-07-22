@@ -1,11 +1,13 @@
 // Sistem ekonomi: jual-beli komoditas, perlengkapan, ramuan, pabrik
 // pengolahan, penukaran Trade Point, dan perjalanan antar kota.
 //
-// CATATAN DESAIN (belum dikerjakan): harga di sini TIDAK bereaksi terhadap
-// volume jualan pemain — sell() menaikkan gold dan reputasi, tapi tidak
-// menyentuh state.prices sama sekali. Akibatnya rute dagang yang sudah
-// ketahuan untung bisa di-spam tanpa batas. Perbaikannya tinggal di sini
-// setelah desain ekonominya disepakati.
+// PASAR YANG BEREAKSI:
+//   - Menjual menekan harga barang itu di kota itu; membeli menaikkannya.
+//   - Tiap hari (perjalanan), harga semua kota ditarik pelan kembali ke
+//     baseline masing-masing (state.basePrices) — rute yang kamu tekan
+//     pulih dalam beberapa hari, jadi tidak bisa di-spam.
+//   - Baseline per kota berbeda (dari harga awal acak), jadi tiap kota
+//     tetap punya karakter harga sendiri: beli murah di A, jual mahal di B.
 
 import { state, setDungeonState } from '../state.js';
 import { rand } from '../core/rng.js';
@@ -14,7 +16,33 @@ import { showEvent } from '../ui/overlay.js';
 import { addLog, gainGold, reputationBonusPct } from './character.js';
 import { genRecruits } from './generators.js';
 import { GOODS, WEAPONS, ARMORS, FACTORY_RECIPES, ELITE_EXCHANGES } from '../data/economy.js';
+import { CITIES } from '../data/world.js';
 import { sfx } from '../audio/sfx.js';
+
+// Parameter pasar. Semua relatif terhadap baseline kota, bukan angka mutlak.
+const SELL_IMPACT = 0.055; // tiap unit dijual: harga turun 5,5%
+const BUY_IMPACT = 0.03;   // tiap unit dibeli: harga naik 3%
+const RECOVERY = 0.18;     // tiap hari: 18% jarak ke baseline ditutup
+const NOISE = 4;           // ±4% derau harian
+const FLOOR_MULT = 0.4;    // harga tak boleh jatuh di bawah 40% baseline
+const CAP_MULT = 1.8;      // harga tak boleh naik di atas 180% baseline
+
+/** Harga "wajar" sebuah barang di sebuah kota. Aman untuk save lama. */
+function baseline(city, id) {
+  const b = state.basePrices && state.basePrices[city];
+  if (b && b[id] != null) return b[id];
+  const g = GOODS.find((x) => x.id === id);
+  return g ? g.base : 10;
+}
+
+/**
+ * Selisih harga sekarang terhadap baseline, dalam persen (dibulatkan).
+ * Positif = di atas normal (bagus untuk dijual), negatif = di bawah
+ * (bagus untuk dibeli). Dipakai lapisan render untuk indikator ↑/↓.
+ */
+export function priceTrend(city, id) {
+  return Math.round((state.prices[city][id] / baseline(city, id) - 1) * 100);
+}
 
 // ---------- KOMODITAS ----------
 
@@ -25,6 +53,13 @@ export function buy(id) {
   if (state.gold < price || state.cap >= state.capMax) { sfx('error'); return; }
   state.gold -= price; state.inventory[id]++; state.cap++;
   state.reputation[state.city] = (state.reputation[state.city] || 0) + 1;
+  // Permintaanmu menaikkan harga di kota ini — minimal +1 supaya terasa juga
+  // di barang murah, dibatasi CAP_MULT × baseline.
+  {
+    const cap = Math.round(baseline(state.city, id) * CAP_MULT);
+    const cur = state.prices[state.city][id];
+    state.prices[state.city][id] = Math.min(cap, Math.max(cur + 1, Math.round(cur * (1 + BUY_IMPACT))));
+  }
   sfx('buy');
   render();
 }
@@ -37,6 +72,13 @@ export function sell(id) {
   gainGold(price); state.inventory[id]--; state.cap--;
   state.reputation[state.city] = (state.reputation[state.city] || 0) + 1;
   state.tradePoints = (state.tradePoints || 0) + 1;
+  // Pasokanmu menekan harga di kota ini — minimal -1 supaya terasa juga di
+  // barang murah, tak jatuh di bawah FLOOR_MULT × baseline.
+  {
+    const floor = Math.max(3, Math.round(baseline(state.city, id) * FLOOR_MULT));
+    const cur = state.prices[state.city][id];
+    state.prices[state.city][id] = Math.max(floor, Math.min(cur - 1, Math.round(cur * (1 - SELL_IMPACT))));
+  }
   const q = state.quests[state.city];
   if (q && q.type === 'sell' && q.goodId === id && q.progress < q.target) { q.progress++; }
   sfx('sell');
@@ -147,18 +189,29 @@ export function travel(dest) {
   const prices = state.prices[dest];
   let eventMsg = null;
 
-  // Kejutan pasar sesekali: kelangkaan menaikkan harga, panen menurunkan.
+  // Pemulihan harian: harga tiap kota ditarik pelan kembali ke baseline-nya
+  // plus sedikit derau. Inilah yang membuat rute untung tidak bisa di-spam —
+  // harga yang kamu tekan dengan menjual perlahan pulih, dan pasar kota yang
+  // tidak kamu datangi pun ikut bergerak sendiri.
+  CITIES.forEach((city) => {
+    const cityPrices = state.prices[city];
+    GOODS.forEach((g) => {
+      const cur = cityPrices[g.id];
+      const target = baseline(city, g.id);
+      let next = cur + (target - cur) * RECOVERY;
+      next *= 1 + rand(-NOISE, NOISE) / 100;
+      cityPrices[g.id] = Math.max(3, Math.round(next));
+    });
+  });
+
+  // Kejutan pasar sesekali di kota tujuan: kelangkaan melonjak, panen anjlok.
+  // Deviasi ini lalu ikut pulih ke baseline pada hari-hari berikutnya.
   if (Math.random() < 0.12) {
     const g = GOODS[rand(0, GOODS.length - 1)];
     const shortage = Math.random() < 0.5;
     prices[g.id] = Math.max(3, Math.round(prices[g.id] * (shortage ? 1.6 : 0.55)));
     eventMsg = shortage ? `Kelangkaan ${g.name} di ${dest}! Harga melonjak.` : `Panen ${g.name} melimpah di ${dest}! Harga anjlok.`;
   }
-  // Pergeseran harga harian yang kecil dan acak.
-  GOODS.forEach((g) => {
-    const drift = rand(-15, 15) / 100;
-    prices[g.id] = Math.max(3, Math.round(prices[g.id] * (1 + drift)));
-  });
 
   if (!state.recruits[dest] || state.recruits[dest].length === 0) state.recruits[dest] = genRecruits();
 

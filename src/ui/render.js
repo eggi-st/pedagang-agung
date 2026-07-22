@@ -11,7 +11,7 @@ import { craftSelection } from '../systems/inventory.js';
 import { promoteCost } from '../systems/generals.js';
 import { testTownAvailable } from '../systems/territory.js';
 import { guildQuestReady, guildQuestProgressNow, guildQuestLabel } from '../systems/generators.js';
-import { travel } from '../systems/economy.js';
+import { travel, priceTrend } from '../systems/economy.js';
 import { checkAchievements } from '../systems/progression.js';
 import { saveGame } from '../systems/save.js';
 import { hpBarColor } from './battle-ui.js';
@@ -83,10 +83,16 @@ export function render(){
     const buyPrice = Math.max(1, Math.round(basePrice*(1-discPct/100)));
     const sellPrice = Math.round(basePrice*(1+repPct/100));
     const owned = state.inventory[g.id];
+    // Indikator harga relatif terhadap baseline kota: mahal = bagus dijual,
+    // murah = bagus dibeli. Ambang 8% supaya derau harian tidak berisik.
+    const trend = priceTrend(state.city, g.id);
+    let tag = '';
+    if (trend >= 8) tag = `<span class="tag" style="background:var(--red);color:#fff;">▲ mahal +${trend}%</span>`;
+    else if (trend <= -8) tag = `<span class="tag" style="background:var(--green);color:#0a2b0d;">▼ murah ${trend}%</span>`;
     const row = document.createElement('div');
     row.className='row';
     row.innerHTML = `
-      <div class="row-name">${g.icon} ${g.name}<small>Punya: ${owned} · Jual: ${sellPrice}g</small></div>
+      <div class="row-name">${g.icon} ${g.name} ${tag}<small>Punya: ${owned} · Jual: ${sellPrice}g</small></div>
       <div class="price">${buyPrice}g</div>
       <button class="mini-btn gold" onclick="buy('${g.id}')" ${state.gold<buyPrice || state.cap>=state.capMax ? 'disabled':''}>Beli</button>
       <button class="mini-btn red" onclick="sell('${g.id}')" ${owned<=0 ? 'disabled':''}>Jual</button>

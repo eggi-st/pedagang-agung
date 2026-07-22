@@ -48,9 +48,12 @@ export function migrateState() {
   if (state.classTransformed === undefined) state.classTransformed = false;
   if (state.lastTestTown === undefined) state.lastTestTown = Math.max(0, state.day - 7);
   if (!state.goldHistory) state.goldHistory = [{ day: state.day, gold: state.gold }];
+  // Save lama belum punya baseline harga: pakai harga saat ini sebagai patokan.
+  if (!state.basePrices) state.basePrices = {};
   CITIES.forEach((c) => {
     if (!state.cityUpgrades[c]) state.cityUpgrades[c] = { gudang: 0, benteng: 0 };
     if (state.cityUpgrades[c].benteng === undefined) state.cityUpgrades[c].benteng = 0;
+    if (!state.basePrices[c] && state.prices[c]) state.basePrices[c] = { ...state.prices[c] };
   });
   state.generals.forEach((g) => {
     if (!g.elem) g.elem = ELEMENTS[rand(0, ELEMENTS.length - 1)];
