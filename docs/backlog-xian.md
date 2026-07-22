@@ -101,8 +101,14 @@ dari pemain menang.
   mereka MENYERGAP (satu giliran gratis) sebelum kamu bergerak; AGI tinggi
   menghindarinya. (selesai — versi terkandung)
   Lanjutan penuh: urutan giliran per-unit interleaved (rewrite loop besar).
-- **Formasi depan/belakang** benar-benar menentukan siapa kena.
-- Target selection & info elemen yang lebih jelas.
+- ✅ **Formasi depan/belakang berpengaruh** — dua anggota teratas = garda depan,
+  menyerap ~85% serangan + bonus DEF (idx0 lebih tebal), melindungi barisan
+  belakang DAN pemain; kalau garda depan tumbang, belakang & pemain terekspos.
+  (selesai)
+- Target selection manual & info elemen yang lebih jelas (lanjutan).
+
+**Tempur v2 kini lengkap:** skill jendral ✅ · combo ✅ · inisiatif AGI ✅ ·
+formasi ✅.
 
 ### F. Ekonomi & Tekanan (lubang lama)
 - **#2 Kalah tempur ada konsekuensi** (gold/hari/item hilang).

@@ -145,12 +145,25 @@ export function generalsAutoAttack(){
 }
 
 export function pickPartyTarget(){
-  const options = [{ref:'char', obj:state.char, def:getDef()}].concat(state.generals.map((m,i)=>({ref:'merc', obj:m, def: i===0?4:0, m, idx:i})));
-  const alive = options.filter(t=>t.obj.hp>0);
-  if(alive.length===0) return null;
-  const front = alive.find(t=>t.ref==='merc' && t.idx===0);
-  if(front && Math.random()<0.55) return front;
-  return alive[rand(0,alive.length-1)];
+  // Formasi: dua anggota teratas = GARDA DEPAN (idx 0,1). Mereka menahan
+  // sebagian besar serangan musuh dan dapat bonus DEF (idx0 lebih tebal),
+  // melindungi barisan belakang DAN pemain. Kalau garda depan tumbang,
+  // barisan belakang & pemain baru terekspos.
+  const gens = state.generals
+    .map((m,i)=>({ ref:'merc', obj:m, m, idx:i, def: i===0 ? 6 : (i===1 ? 3 : 0) }))
+    .filter(t=>t.obj.hp>0);
+  const front = gens.filter(t=>t.idx<2);
+  const back = gens.filter(t=>t.idx>=2);
+  const charT = { ref:'char', obj:state.char, def:getDef() };
+  const rear = back.concat(state.char.hp>0 ? [charT] : []);
+
+  if(front.length){
+    // 85% serangan kena garda depan; 15% bocor ke belakang/pemain.
+    if(Math.random() < 0.85 || rear.length===0) return front[rand(0,front.length-1)];
+    return rear[rand(0,rear.length-1)];
+  }
+  // Tak ada garda depan: musuh bebas menyerang belakang & pemain.
+  return rear.length ? rear[rand(0,rear.length-1)] : null;
 }
 
 export function playerElem(){ return state.equipment.weapon ? WEAPONS.find(w=>w.id===state.equipment.weapon).elem : null; }
