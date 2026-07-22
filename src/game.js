@@ -26,8 +26,8 @@ import { showEvent, closeEvent } from './ui/overlay.js';
 import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, buyFactory, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
 import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee } from './systems/battle.js';
 import { renderBattle } from './ui/battle-ui.js';
-import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem } from './systems/inventory.js';
-import { recruitGeneral, moveGeneral, useRebirthStone, promoteGeneral, equipGeneralWeapon } from './systems/generals.js';
+import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem, storeItem, retrieveItem } from './systems/inventory.js';
+import { recruitGeneral, moveGeneral, useRebirthStone, promoteGeneral, equipGeneralWeapon, stashToBarracks, callFromBarracks } from './systems/generals.js';
 import { upgradeGudang, upgradeBenteng, enterDungeon, attackGarrison, enterTestTown } from './systems/territory.js';
 import { claimQuest, claimGuildQuest } from './systems/quests.js';
 import { render, switchTab } from './ui/render.js';
@@ -144,7 +144,9 @@ function startGame(nation, className, opts){
     ownedWeapons: [], ownedArmors: [],
     potions: 2,
     generals: [],
+    barracks: [],
     items: [],
+    storage: [],
     inventory: {},
     cap:0, capMax,
     prices: {}, basePrices: {}, recruits: {},
@@ -240,6 +242,10 @@ Object.assign(window, {
   moveGeneral,
   promoteGeneral,
   equipGeneralWeapon,
+  stashToBarracks,
+  callFromBarracks,
+  storeItem,
+  retrieveItem,
   recruitGeneral,
   sell,
   sellGear,

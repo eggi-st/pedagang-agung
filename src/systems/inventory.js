@@ -85,3 +85,28 @@ export function sellItem(uid){
   addLog(`Menjual ${it.name} seharga ${it.sellValue}g.`);
   render();
 }
+
+// ---------- GUDANG PUSAT (item) ----------
+
+/** Simpan item dari tas ke gudang pusat (dilepas dari slot & pilihan craft). */
+export function storeItem(uid){
+  const idx = state.items.findIndex(i=>i.uid===uid);
+  if(idx<0) return;
+  const it = state.items[idx];
+  if(state.equipment.accessory1===uid) state.equipment.accessory1 = null;
+  if(state.equipment.accessory2===uid) state.equipment.accessory2 = null;
+  craftSelection = craftSelection.filter(u=>u!==uid);
+  state.items.splice(idx,1);
+  (state.storage || (state.storage = [])).push(it);
+  render();
+}
+
+/** Ambil item dari gudang pusat kembali ke tas. */
+export function retrieveItem(uid){
+  const idx = state.storage.findIndex(i=>i.uid===uid);
+  if(idx<0) return;
+  const it = state.storage[idx];
+  state.storage.splice(idx,1);
+  state.items.push(it);
+  render();
+}

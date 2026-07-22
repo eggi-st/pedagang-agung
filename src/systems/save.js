@@ -61,6 +61,8 @@ export function migrateState() {
   if (state.lastTestTown === undefined) state.lastTestTown = Math.max(0, state.day - 7);
   if (!state.goldHistory) state.goldHistory = [{ day: state.day, gold: state.gold }];
   if (!state.playerName) state.playerName = 'Saudagar Kelana'; // save lama tanpa nama
+  if (!state.barracks) state.barracks = []; // barak cadangan pasukan
+  if (!state.storage) state.storage = [];   // gudang pusat item
   // Equip multi-slot: pindahkan armor lama (satu slot) ke slot 'badan',
   // lalu pastikan keempat slot pelindung ada.
   const eq = state.equipment;

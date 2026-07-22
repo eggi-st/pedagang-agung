@@ -104,6 +104,29 @@ export function moveGeneral(idx, dir){
   render();
 }
 
+// ---------- BARAK (cadangan pasukan) ----------
+
+/** Pindahkan anggota aktif ke barak (bebaskan slot pasukan). */
+export function stashToBarracks(idx){
+  const m = state.generals[idx];
+  if(!m) return;
+  state.generals.splice(idx, 1);
+  (state.barracks || (state.barracks = [])).push(m);
+  addLog(`${m.name} diistirahatkan ke barak.`);
+  render();
+}
+
+/** Panggil anggota dari barak ke pasukan aktif (kalau slot masih ada). */
+export function callFromBarracks(idx){
+  if(state.generals.length >= MAX_GENERALS) { sfx('error'); return; }
+  const m = state.barracks[idx];
+  if(!m) return;
+  state.barracks.splice(idx, 1);
+  state.generals.push(m);
+  addLog(`${m.name} dipanggil dari barak ke pasukan.`);
+  render();
+}
+
 export function useRebirthStone(idx){
   if((state.rebirthStones||0)<=0) return;
   const g = state.generals[idx];

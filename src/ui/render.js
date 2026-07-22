@@ -238,10 +238,25 @@ export function render(){
       <button class="mini-btn ${slot===1?'':'teal'}" onclick="equipAccessory('${it.uid}',1)" ${slot===1?'disabled':''}>${slot===1?'Slot 1':'Pakai S1'}</button>
       <button class="mini-btn ${slot===2?'':'teal'}" onclick="equipAccessory('${it.uid}',2)" ${slot===2?'disabled':''}>${slot===2?'Slot 2':'Pakai S2'}</button>
       <button class="mini-btn ${selected?'gold':'orange'}" onclick="toggleCraftSelect('${it.uid}')">${selected?'Batal Pilih':'Pilih'}</button>
+      <button class="mini-btn" style="background:var(--panel-light);" onclick="storeItem('${it.uid}')">Simpan</button>
       <button class="mini-btn red" onclick="sellItem('${it.uid}')">Jual</button>
     `;
     itemList.appendChild(row);
   });
+
+  // Gudang pusat: item yang disimpan, bisa diambil kembali di kota mana pun.
+  const storageList = document.getElementById('storage-list');
+  const storage = state.storage || [];
+  storageList.innerHTML = storage.length===0 ? '<div style="color:var(--dim); font-size:8px;">Gudang pusat kosong.</div>' : '';
+  [...storage].sort((a,b)=> RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity)).forEach(it=>{
+    const row = document.createElement('div');
+    row.className='row';
+    row.innerHTML = `<div class="row-icon" style="flex:1; min-width:100px;"><div class="icon-box rarity-${it.rarity}">${TYPE_ICON[it.type]}</div>
+      <div class="row-name" style="min-width:0;">${it.name} <span class="tag rarity-${it.rarity}">${it.rarity}</span><small>bonus +${it.bonus} · nilai jual ${it.sellValue}g</small></div></div>
+      <button class="mini-btn teal" onclick="retrieveItem('${it.uid}')">Ambil</button>`;
+    storageList.appendChild(row);
+  });
+
   renderCraftAction();
   renderDiagramAction();
 
@@ -271,11 +286,28 @@ export function render(){
       </div>
       ${canPromote ? `<button class="mini-btn gold" style="width:100%; margin-top:6px;" onclick="promoteGeneral(${idx})" ${(state.gold<cost.gold||state.medals<cost.medals||(state.upgradeParts||0)<cost.parts)?'disabled':''}>Promosikan (${cost.gold}g + ${cost.medals} medali${cost.parts>0 ? ' + '+cost.parts+' part':''})</button>` : '<div style="font-size:6.5px;color:var(--gold);margin-top:4px;">Pangkat tertinggi tercapai</div>'}
       <button class="mini-btn orange" style="width:100%; margin-top:4px;" onclick="useRebirthStone(${idx})" ${(state.rebirthStones||0)<=0?'disabled':''}>💎 Pakai Rebirth Stone (punya: ${state.rebirthStones||0})</button>
+      <button class="mini-btn" style="width:100%; margin-top:4px; background:var(--panel-light);" onclick="stashToBarracks(${idx})">🏰 Simpan ke Barak</button>
       ${m.rebirthBonus ? `<div style="font-size:6.5px; color:var(--gold); margin-top:2px;">Rebirth bonus: +${m.rebirthBonus} ATK/HP</div>` : ''}
     `;
     mList.appendChild(div);
   });
   paintAllSprites(mList);
+
+  // Barak: pasukan cadangan yang bisa dipanggil kembali (kalau slot ada).
+  const bList = document.getElementById('barracks-list');
+  const barracks = state.barracks || [];
+  bList.innerHTML = barracks.length===0 ? '<div style="color:var(--dim); font-size:8px;">Barak kosong.</div>' : '';
+  barracks.forEach((m,idx)=>{
+    const full = state.generals.length>=MAX_GENERALS;
+    const row = document.createElement('div');
+    row.className='row';
+    const label = m.kind==='monster' ? '🐾 '+(m.monsterName||m.name) : (RANK_NAMES[m.rank]||'')+' '+m.name;
+    row.innerHTML = `<div class="row-icon"><div class="icon-box">${m.kind==='monster' ? spriteCanvasHTML('monster', memberElem(m)||'Bumi', 28, m.monsterName) : spriteCanvasHTML('general', m.rank, 28)}</div>
+      <div class="row-name">${label}<small>Lv${m.level||1} · ATK ${memberAtk(m)} · HP ${m.hp}/${m.maxHp} ${ELEMENT_ICON[memberElem(m)]||''}</small></div></div>
+      <button class="mini-btn teal" onclick="callFromBarracks(${idx})" ${full?'disabled':''}>${full?'Penuh':'→ Pasukan'}</button>`;
+    bList.appendChild(row);
+  });
+  paintAllSprites(bList);
 
   renderAchievements();
 

@@ -81,10 +81,13 @@ dari pemain menang.
   tertentu ada di satu pertempuran.
 
 ### D. Penyimpanan
-- **Barak** (ingatan) — simpan jendral di luar party aktif (party dibatasi 6);
-  tukar-pasang di kota.
-- **Inventory pusat** (ingatan) — gudang item yang bisa diakses di kota mana
-  pun (seperti bank), memisahkan tas bawaan dari simpanan.
+- ✅ **Barak** — simpan jendral/monster di luar party aktif (party maks 6);
+  tukar-pasang kapan saja. state.barracks; anggota di barak tak bertempur/EXP.
+  (selesai)
+- ✅ **Gudang pusat item** — simpan/ambil item, akses di kota mana pun.
+  state.storage. (selesai)
+- Lanjutan: batas kapasitas tas (biar gudang jadi keputusan), biaya sewa
+  gudang/barak per hari (tekanan upkeep).
 
 ### E. Sistem Tempur v2
 - Urutan giliran berdasarkan AGI (kecepatan), bukan fixed.
