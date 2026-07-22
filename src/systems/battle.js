@@ -70,6 +70,16 @@ export function startBattle(context, dest){
     flashTargets: new Set()
   });
   document.getElementById('battle-title').textContent = context==='garrison' ? 'PERTEMPURAN GARNISUN' : (context==='historical' ? '🏛️ HISTORICAL SCENARIO' : (context==='testtown' ? `🏟️ TEST TOWN — GAUNTLET ${dungeonState.floor}/${dungeonState.maxFloor}` : (context==='dungeon' ? `DUNGEON — LANTAI ${dungeonState.floor}/${dungeonState.maxFloor}` : 'PERTEMPURAN')));
+
+  // Inisiatif pembuka berbasis AGI: kalau musuh lebih gesit, mereka menyergap
+  // (satu giliran gratis) sebelum kamu bergerak. AGI tinggi menghindarinya.
+  const partySpeed = state.char.agi + rand(0,3);
+  const enemySpeed = 4 + Math.round(state.day*0.3) + (isBoss?4:0) + rand(0,3);
+  if(enemySpeed > partySpeed){
+    blog('⚡ Kamu disergap! Musuh yang lebih gesit menyerang lebih dulu.');
+    enemyTurn();
+    checkBattleEnd();
+  }
   renderBattle();
   const bov = document.getElementById('battle-overlay');
   bov.style.display='flex';

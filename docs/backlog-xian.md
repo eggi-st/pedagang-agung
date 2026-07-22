@@ -97,7 +97,10 @@ dari pemain menang.
   Petir+Air=Prahara Petir, Bumi+Api=Letusan Gunung, Air+Angin=Topan+heal,
   Petir+Bumi=Gempa Petir) memicu serangan gabungan AOE, memakai jatah skill
   KEDUA anggota. Tombol muncul saat pasangan tersedia. (selesai)
-- **Urutan giliran per AGI** — bukan fixed (pemain → pasukan → musuh).
+- ✅ **Inisiatif pembuka per-AGI** — kalau musuh lebih gesit (skala hari + bos),
+  mereka MENYERGAP (satu giliran gratis) sebelum kamu bergerak; AGI tinggi
+  menghindarinya. (selesai — versi terkandung)
+  Lanjutan penuh: urutan giliran per-unit interleaved (rewrite loop besar).
 - **Formasi depan/belakang** benar-benar menentukan siapa kena.
 - Target selection & info elemen yang lebih jelas.
 
