@@ -38,6 +38,25 @@ const CAP_MULT = 1.6;      // harga tak naik di atas 160% baseline
 const SHIP_DAYS = 2;
 const SHIP_FARE = 50;
 
+// Rasa lapar: kenyang berkurang tiap hari; habis = kehilangan HP.
+export const SATIETY_MAX = 100;
+const SATIETY_PER_DAY = 8;
+const STARVE_DMG = 8;
+export const FOOD_COST = 15;
+export const FOOD_RESTORE = 45;
+
+/** Makan di warung: bayar gold, pulihkan kenyang. */
+export function eatFood() {
+  const cur = state.satiety == null ? SATIETY_MAX : state.satiety;
+  if (cur >= SATIETY_MAX) return;
+  if (state.gold < FOOD_COST) { sfx('error'); return; }
+  state.gold -= FOOD_COST;
+  state.satiety = Math.min(SATIETY_MAX, cur + FOOD_RESTORE);
+  sfx('buy');
+  addLog(`🍚 Kamu makan seharga ${FOOD_COST}g. Kenyang: ${state.satiety}/${SATIETY_MAX}.`);
+  render();
+}
+
 /** Harga "wajar" sebuah barang di sebuah kota. Aman untuk save lama. */
 function baseline(city, id) {
   const b = state.basePrices && state.basePrices[city];
@@ -260,6 +279,16 @@ export function travel(dest) {
   let eventMsg = null;
 
   if (ship) addLog(`⛵ Berlayar ke ${dest} (${NATION_LABEL[CITY_NATION[dest]]}) — ${days} hari, ongkos ${fare}g.`);
+
+  // Rasa lapar: kenyang berkurang tiap hari; kalau habis, kelaparan menggerus HP.
+  const curSat = state.satiety == null ? SATIETY_MAX : state.satiety;
+  state.satiety = Math.max(0, curSat - SATIETY_PER_DAY * days);
+  if (state.satiety <= 0) {
+    const dmg = STARVE_DMG * days;
+    state.char.hp = Math.max(0, state.char.hp - dmg);
+    addLog(`🍖 Kamu KELAPARAN! Kehilangan ${dmg} HP. Segera makan di warung.`);
+    if (checkEndConditions()) { render(); return; }
+  }
 
   // Pemulihan harga berjalan per hari yang dilewati (kapal = beberapa hari),
   // jadi rute yang ditekan tetap pulih sesuai lama perjalanan.

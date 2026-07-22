@@ -477,6 +477,9 @@ export function battleFlee(){
   if(battle.over) return;
   const chance = 0.3 + state.char.agi*0.03;
   if(Math.random() < chance){
+    // Kabur bukan tanpa harga: kamu menjatuhkan sebagian gold saat panik.
+    const drop = Math.round(state.gold*0.1);
+    if(drop>0){ state.gold -= drop; blog(`Kamu menjatuhkan ${drop} gold saat panik kabur.`); }
     blog('Kamu berhasil kabur dari pertempuran!');
     battle.over = true;
     document.getElementById('battle-title').textContent = 'KABUR BERHASIL';

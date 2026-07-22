@@ -63,6 +63,7 @@ export function migrateState() {
   if (!state.playerName) state.playerName = 'Saudagar Kelana'; // save lama tanpa nama
   if (!state.barracks) state.barracks = []; // barak cadangan pasukan
   if (!state.storage) state.storage = [];   // gudang pusat item
+  if (state.satiety == null) state.satiety = 100; // rasa lapar
   // Equip multi-slot: pindahkan armor lama (satu slot) ke slot 'badan',
   // lalu pastikan keempat slot pelindung ada.
   const eq = state.equipment;

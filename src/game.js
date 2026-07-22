@@ -23,7 +23,7 @@ import { addLog } from './systems/character.js';
 import { genPrices, genRecruits, genQuest, genGuildQuest } from './systems/generators.js';
 import { registerHooks } from './core/bus.js';
 import { showEvent, closeEvent } from './ui/overlay.js';
-import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, buyFactory, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
+import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, eatFood, buyFactory, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
 import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee, useGeneralSkill, useCombo } from './systems/battle.js';
 import { renderBattle } from './ui/battle-ui.js';
 import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem, storeItem, retrieveItem } from './systems/inventory.js';
@@ -143,6 +143,7 @@ function startGame(nation, className, opts){
     equipment: { weapon:null, kepala:null, badan:null, celana:null, sepatu:null, accessory1:null, accessory2:null },
     ownedWeapons: [], ownedArmors: [],
     potions: 2,
+    satiety: 100,
     generals: [],
     barracks: [],
     items: [],
@@ -223,6 +224,7 @@ Object.assign(window, {
   buyGear,
   buyPotion,
   restAtInn,
+  eatFood,
   chooseClass,
   chooseNation,
   claimGuildQuest,

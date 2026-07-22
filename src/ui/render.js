@@ -11,7 +11,7 @@ import { craftSelection } from '../systems/inventory.js';
 import { promoteCost, memberAtk, memberElem, memberWeapon, availableWeaponsFor } from '../systems/generals.js';
 import { testTownAvailable } from '../systems/territory.js';
 import { guildQuestReady, guildQuestProgressNow, guildQuestLabel } from '../systems/generators.js';
-import { travel, travelInfo, priceTrend, restCost } from '../systems/economy.js';
+import { travel, travelInfo, priceTrend, restCost, eatFood, SATIETY_MAX, FOOD_COST, FOOD_RESTORE } from '../systems/economy.js';
 import { calendarFromDay } from '../data/calendar.js';
 import { CITY_NATION, NATION_LABEL } from '../data/world.js';
 import { checkAchievements } from '../systems/progression.js';
@@ -51,6 +51,10 @@ export function render(){
   document.getElementById('s-level').textContent = c.level;
   document.getElementById('s-medals').textContent = state.medals;
   document.getElementById('s-tp').textContent = state.tradePoints||0;
+  const sat = state.satiety==null ? 100 : state.satiety;
+  const satEl = document.getElementById('s-satiety');
+  satEl.textContent = sat;
+  satEl.style.color = sat<=0 ? 'var(--red)' : (sat<=25 ? 'var(--orange)' : 'var(--gold)');
   document.getElementById('s-cap').textContent = state.cap;
   document.getElementById('s-capmax').textContent = state.capMax;
   document.getElementById('s-exp').textContent = c.exp;
@@ -162,6 +166,14 @@ export function render(){
       <div class="row-name">Ramuan Penyembuh<small>Pulihkan 40 HP</small></div>
       <div class="price">25g</div>
       <button class="mini-btn gold" onclick="buyPotion()" ${state.gold<25?'disabled':''}>Beli</button>
+    </div>`;
+
+  const sat2 = state.satiety==null ? 100 : state.satiety;
+  document.getElementById('food-list').innerHTML = `
+    <div class="row">
+      <div class="row-name">Makan di Warung<small>Kenyang ${sat2}/${SATIETY_MAX} · +${FOOD_RESTORE} kenyang. Kenyang habis = kehilangan HP tiap hari.</small></div>
+      <div class="price">${FOOD_COST}g</div>
+      <button class="mini-btn green" onclick="eatFood()" ${sat2>=SATIETY_MAX || state.gold<FOOD_COST ? 'disabled':''}>${sat2>=SATIETY_MAX?'Kenyang':'Makan'}</button>
     </div>`;
 
   const rc = restCost();

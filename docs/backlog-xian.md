@@ -54,11 +54,12 @@ dari pemain menang.
   MMO persisten; tidak cocok ditiru untuk single-player offline.
 
 ### A. Progression & Survival
-- **Level per anggota** — jendral & monster dapat EXP dan naik level sendiri
-  (bukan cuma promosi berbayar). Karakter utama sudah naik level.
-- **Rasa lapar & makan** (ingatan) — karakter utama lapar seiring hari; harus
-  makan (item makanan / beli di kota). Kalau kelaparan: penalti stat/HP. Ini
-  sekaligus mengisi lubang "tekanan/konsekuensi".
+- ✅ **Level per anggota** — jendral & monster dapat EXP dan naik level sendiri.
+- ✅ **Rasa lapar & makan** — kenyang (state.satiety, HUD) turun 8/hari; habis =
+  kehilangan 8 HP/hari (bisa berujung game over). Warung makan: 15g, +45 kenyang.
+  (selesai)
+- ✅ **Konsekuensi kalah** — kabur berhasil menjatuhkan 10% gold; kalah tempur
+  (char HP 0) = game over sejak awal. (selesai)
 
 ### B. Konten per-Negara (ingatan)
 - ✅ **Jendral khas per negara** — NATION_MERCS: Joseon/Ming/Jepang/India punya
