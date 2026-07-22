@@ -18,7 +18,7 @@ import { hpBarColor } from './battle-ui.js';
 import { drawPixelSprite, spriteCanvasHTML, paintAllSprites } from './sprites.js';
 import { SPRITE_HUMANOID, SKIN_TONE } from '../data/sprites.js';
 import { NATION_BODY_COLOR, CLASS_TRANSFORMS } from '../data/classes.js';
-import { GOODS, WEAPONS, ARMORS, ARMOR_SLOTS, FACTORY_RECIPES, ELITE_EXCHANGES } from '../data/economy.js';
+import { GOODS, WEAPONS, ARMORS, ARMOR_SLOTS, FACTORY_RECIPES, FACTORY_PRICE, ELITE_EXCHANGES } from '../data/economy.js';
 import { ELEMENT_ICON } from '../data/elements.js';
 import { MAX_GENERALS, RANK_NAMES } from '../data/mercenaries/index.js';
 import { TYPE_ICON, TYPE_LABEL, RARITY_ORDER, DIAGRAMS } from '../data/items.js';
@@ -420,26 +420,33 @@ export function renderFactory(){
   const statusDiv = document.getElementById('factory-status');
   const recipesDiv = document.getElementById('factory-recipes');
   const processedDiv = document.getElementById('processed-list');
-  if(state.factory.active){
-    const r = FACTORY_RECIPES.find(x=>x.id===state.factory.active.recipeId);
-    const daysLeft = Math.max(0, state.factory.active.readyDay - state.day);
-    statusDiv.innerHTML = `<div class="row"><div class="row-name">🏭 Sedang memproduksi: ${r.name}<small>${daysLeft>0 ? `Selesai ${daysLeft} hari lagi` : 'Akan selesai saat kamu berpindah kota'}</small></div></div>`;
+  recipesDiv.innerHTML = '';
+
+  const city = state.city;
+  const recipe = FACTORY_RECIPES.find(r=>r.city===city);
+  const f = state.factories[city];
+
+  if(!recipe){
+    statusDiv.innerHTML = `<div style="font-size:6.5px; color:var(--dim);">${city} tidak punya pabrik.</div>`;
+  } else if(!f.owned){
+    // Belum dimiliki: tawarkan beli.
+    statusDiv.innerHTML = `<div class="row"><div class="row-name">Pabrik ${recipe.name} di ${city}<small>Miliki dulu untuk mulai memproduksi. Hasil bisa dijual ke pasar.</small></div>
+      <button class="mini-btn gold" onclick="buyFactory('${city}')" ${state.gold<FACTORY_PRICE?'disabled':''}>Beli ${FACTORY_PRICE}g</button></div>`;
+  } else if(f.active){
+    const r = FACTORY_RECIPES.find(x=>x.id===f.active.recipeId);
+    const daysLeft = Math.max(0, f.active.readyDay - state.day);
+    statusDiv.innerHTML = `<div class="row"><div class="row-name">🏭 Memproduksi: ${r.name}<small>${daysLeft>0 ? `Selesai ${daysLeft} hari lagi` : 'Akan selesai saat kamu berpindah kota'}</small></div></div>`;
     recipesDiv.innerHTML = '<div style="font-size:6.5px; color:var(--dim);">Tunggu produksi selesai sebelum memulai yang baru.</div>';
   } else {
-    statusDiv.innerHTML = '<div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Pabrik kosong, siap memproduksi.</div>';
-    recipesDiv.innerHTML = '';
-    FACTORY_RECIPES.forEach(r=>{
-      const inputsText = Object.entries(r.inputs).map(([gid,qty])=>{
-        const g = GOODS.find(x=>x.id===gid);
-        return `${qty}x ${g.name}`;
-      }).join(', ');
-      const canAfford = Object.entries(r.inputs).every(([gid,qty])=> state.inventory[gid]>=qty) && state.gold>=r.goldCost;
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = `<div class="row-name">${r.name}<small>Butuh: ${inputsText} + ${r.goldCost}g · ${r.days} hari · Jual ${r.sellValue}g</small></div>
-        <button class="mini-btn gold" onclick="startProduction('${r.id}')" ${canAfford?'':'disabled'}>Mulai</button>`;
-      recipesDiv.appendChild(row);
-    });
+    statusDiv.innerHTML = `<div style="font-size:6.5px; color:var(--green); margin-bottom:6px;">Pabrik ${city} milikmu, siap memproduksi.</div>`;
+    const r = recipe;
+    const inputsText = Object.entries(r.inputs).map(([gid,qty])=>{ const g=GOODS.find(x=>x.id===gid); return `${qty}x ${g.name}`; }).join(', ');
+    const canAfford = Object.entries(r.inputs).every(([gid,qty])=> state.inventory[gid]>=qty) && state.gold>=r.goldCost;
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<div class="row-name">${r.name}<small>Butuh: ${inputsText} + ${r.goldCost}g · ${r.days} hari · Jual ${r.sellValue}g</small></div>
+      <button class="mini-btn gold" onclick="startProduction('${r.id}')" ${canAfford?'':'disabled'}>Mulai</button>`;
+    recipesDiv.appendChild(row);
   }
   processedDiv.innerHTML = '';
   const anyProcessed = FACTORY_RECIPES.some(r=> (state.processedGoods[r.id]||0)>0);

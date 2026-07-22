@@ -43,10 +43,17 @@ export const ARMORS = [
   { id: 'sepatu_lars_baja', name: 'Sepatu Lars Baja', slot: 'sepatu', def: 7, price: 170 },
 ];
 
+// Harga membeli (memiliki) satu pabrik di sebuah kota.
+export const FACTORY_PRICE = 300;
+
+// Tiap resep terikat ke SATU kota — pabrik kota itu hanya memproduksi resepnya.
+// Pabrik harus dibeli (dimiliki) dulu sebelum bisa produksi.
 export const FACTORY_RECIPES = [
-  { id: 'kain_halus', name: 'Kain Sutra Halus', inputs: { sutra: 5 }, days: 2, goldCost: 30, sellValue: 280 },
-  { id: 'minyak_rempah', name: 'Minyak Rempah Wangi', inputs: { rempah: 5 }, days: 2, goldCost: 20, sellValue: 170 },
-  { id: 'porselen_ukir', name: 'Porselen Berukir', inputs: { porselen: 3 }, days: 3, goldCost: 40, sellValue: 260 },
+  { id: 'kain_halus', name: 'Kain Sutra Halus', city: 'Hanseong', inputs: { sutra: 5 }, days: 2, goldCost: 30, sellValue: 280 },
+  { id: 'minyak_rempah', name: 'Minyak Rempah Wangi', city: 'Beijing', inputs: { rempah: 5 }, days: 2, goldCost: 20, sellValue: 170 },
+  { id: 'porselen_ukir', name: 'Porselen Berukir', city: 'Kyoto', inputs: { porselen: 3 }, days: 3, goldCost: 40, sellValue: 260 },
+  { id: 'teh_wangi', name: 'Teh Wangi Premium', city: 'Taipei', inputs: { teh: 6 }, days: 2, goldCost: 25, sellValue: 150 },
+  { id: 'pusaka_tempa', name: 'Pusaka Tempaan', city: 'Chennai', inputs: { senjata_dagang: 3 }, days: 3, goldCost: 60, sellValue: 340 },
 ];
 
 export const ELITE_EXCHANGES = [

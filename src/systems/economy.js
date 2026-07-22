@@ -15,7 +15,7 @@ import { render, startBattle, checkEndConditions } from '../core/bus.js';
 import { showEvent } from '../ui/overlay.js';
 import { addLog, gainGold, reputationBonusPct } from './character.js';
 import { genRecruits } from './generators.js';
-import { GOODS, WEAPONS, ARMORS, FACTORY_RECIPES, ELITE_EXCHANGES } from '../data/economy.js';
+import { GOODS, WEAPONS, ARMORS, FACTORY_RECIPES, FACTORY_PRICE, ELITE_EXCHANGES } from '../data/economy.js';
 import { CITIES } from '../data/world.js';
 import { releaseWeaponFromMembers } from './generals.js';
 import { sfx } from '../audio/sfx.js';
@@ -158,16 +158,31 @@ export function restAtInn() {
 
 // ---------- PABRIK PENGOLAHAN ----------
 
+/** Beli (miliki) pabrik di kota saat ini. Harus punya sebelum bisa produksi. */
+export function buyFactory(city) {
+  const f = state.factories[city];
+  if (!f || f.owned) return;
+  if (state.gold < FACTORY_PRICE) { sfx('error'); return; }
+  state.gold -= FACTORY_PRICE;
+  f.owned = true;
+  sfx('buy');
+  addLog(`Membeli pabrik di ${city} seharga ${FACTORY_PRICE}g.`);
+  render();
+}
+
 export function startProduction(recipeId) {
-  if (state.factory.active) return;
   const r = FACTORY_RECIPES.find((x) => x.id === recipeId);
+  if (!r) return;
+  const f = state.factories[r.city];
+  // Hanya bisa produksi di kota pabriknya, kalau pabrik dimiliki & sedang kosong.
+  if (!f || !f.owned || f.active || r.city !== state.city) { sfx('error'); return; }
   const canAfford = Object.entries(r.inputs).every(([gid, qty]) => state.inventory[gid] >= qty) && state.gold >= r.goldCost;
   if (!canAfford) { sfx('error'); return; }
   Object.entries(r.inputs).forEach(([gid, qty]) => { state.inventory[gid] -= qty; state.cap -= qty; });
   state.gold -= r.goldCost;
-  state.factory.active = { recipeId, readyDay: state.day + r.days };
+  f.active = { recipeId, readyDay: state.day + r.days };
   sfx('buy');
-  addLog(`Memulai produksi ${r.name}, selesai dalam ${r.days} hari.`);
+  addLog(`Memulai produksi ${r.name} di ${r.city}, selesai dalam ${r.days} hari.`);
   render();
 }
 
@@ -242,12 +257,16 @@ export function travel(dest) {
 
   if (!state.recruits[dest] || state.recruits[dest].length === 0) state.recruits[dest] = genRecruits();
 
-  if (state.factory.active && state.day >= state.factory.active.readyDay) {
-    const r = FACTORY_RECIPES.find((x) => x.id === state.factory.active.recipeId);
-    state.processedGoods[r.id] = (state.processedGoods[r.id] || 0) + 1;
-    addLog(`Produksi ${r.name} selesai! Siap dijual di Pabrik.`);
-    state.factory.active = null;
-  }
+  // Semua pabrik yang dimiliki berjalan otomatis; panen yang sudah selesai.
+  CITIES.forEach((c) => {
+    const f = state.factories[c];
+    if (f && f.active && state.day >= f.active.readyDay) {
+      const r = FACTORY_RECIPES.find((x) => x.id === f.active.recipeId);
+      state.processedGoods[r.id] = (state.processedGoods[r.id] || 0) + 1;
+      addLog(`Produksi ${r.name} di ${c} selesai! Siap dijual.`);
+      f.active = null;
+    }
+  });
 
   if (state.owned.length > 0) {
     let income = 0;

@@ -23,7 +23,7 @@ import { addLog } from './systems/character.js';
 import { genPrices, genRecruits, genQuest, genGuildQuest } from './systems/generators.js';
 import { registerHooks } from './core/bus.js';
 import { showEvent, closeEvent } from './ui/overlay.js';
-import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
+import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, buyFactory, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
 import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee } from './systems/battle.js';
 import { renderBattle } from './ui/battle-ui.js';
 import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem } from './systems/inventory.js';
@@ -150,7 +150,7 @@ function startGame(nation, className, opts){
     prices: {}, basePrices: {}, recruits: {},
     owned: [], medals: 0,
     reputation: {}, cityUpgrades: {}, quests: {},
-    factory: { active: null }, processedGoods: {},
+    factories: {}, processedGoods: {},
     guildQuest: null,
     tradePoints: 0, upgradeParts: 0, rebirthStones: 0,
     lastTestTown: 0,
@@ -171,6 +171,7 @@ function startGame(nation, className, opts){
     state.reputation[c] = 0;
     state.cityUpgrades[c] = { gudang: 0, benteng: 0 };
     state.quests[c] = genQuest();
+    state.factories[c] = { owned: false, active: null };
   });
   FACTORY_RECIPES.forEach(r=> state.processedGoods[r.id]=0);
   state.guildQuest = genGuildQuest();
@@ -245,6 +246,7 @@ Object.assign(window, {
   sellItem,
   sellProcessed,
   startNewGamePlus,
+  buyFactory,
   startProduction,
   switchTab,
   toggleCraftSelect,

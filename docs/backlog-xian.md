@@ -31,6 +31,17 @@ dari pemain menang.
 
 ## BACKLOG
 
+### Ekonomi Produksi & Geografi
+- ✅ **Pabrik per-kota + kepemilikan** — tiap kota punya pabrik berbeda; harus
+  DIBELI (300g) dulu; isi kebutuhan → produksi jalan otomatis seiring hari
+  (biaya produksi) → hasil dijual ke pasar. Banyak pabrik bisa jalan paralel.
+  (selesai)
+- **Kapal antar-negara** (ingatan) — pindah pulau/negara naik kapal (biaya +
+  waktu lebih), berbeda dari perjalanan darat antar-kota. Butuh: geografi
+  dikelompokkan per negara/pulau, biaya & durasi kapal, UI peta.
+- **Slot pabrik lebih dari satu per kota / upgrade kapasitas** — perluasan
+  produksi.
+
 ### A. Progression & Survival
 - **Level per anggota** — jendral & monster dapat EXP dan naik level sendiri
   (bukan cuma promosi berbayar). Karakter utama sudah naik level.

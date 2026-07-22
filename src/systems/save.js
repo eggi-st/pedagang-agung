@@ -39,7 +39,19 @@ export function clearSave(slot) {
  */
 export function migrateState() {
   if (!state) return;
-  if (!state.factory) state.factory = { active: null };
+  // Pabrik per-kota (dari pabrik tunggal lama).
+  if (!state.factories) {
+    state.factories = {};
+    CITIES.forEach((c) => { state.factories[c] = { owned: false, active: null }; });
+    if (state.factory) {
+      // Migrasi produksi tunggal lama ke pabrik kota yang sesuai (dianggap dimiliki).
+      if (state.factory.active) {
+        const r = FACTORY_RECIPES.find((x) => x.id === state.factory.active.recipeId);
+        if (r && state.factories[r.city]) { state.factories[r.city].owned = true; state.factories[r.city].active = state.factory.active; }
+      }
+      delete state.factory;
+    }
+  }
   if (!state.processedGoods) { state.processedGoods = {}; FACTORY_RECIPES.forEach((r) => state.processedGoods[r.id] = 0); }
   if (!state.guildQuest) state.guildQuest = genGuildQuest();
   if (state.tradePoints === undefined) state.tradePoints = 0;
