@@ -11,7 +11,7 @@ import { render, renderBattle, checkEndConditions, endGame } from '../core/bus.j
 import { showEvent } from '../ui/overlay.js';
 import { addLog, gainGold, getAtk, getDef } from './character.js';
 import { rollDrop, genItem } from './generators.js';
-import { MONSTERS, DUNGEON_MONSTERS, NATION_MONSTERS } from '../data/monsters.js';
+import { MONSTERS, DUNGEON_MONSTERS, NATION_MONSTERS, LEGENDARY } from '../data/monsters.js';
 import { CITY_NATION } from '../data/world.js';
 import { MONSTER_SPRITE } from '../data/sprites.js';
 import { MAX_GENERALS } from '../data/mercenaries/index.js';
@@ -46,6 +46,11 @@ export function startBattle(context, dest){
     scale = (1.6 + dungeonState.floor*0.35 + state.day*0.04) * ngScale;
     isBoss = dungeonState.floor===dungeonState.maxFloor;
     if(isBoss){ scale *= 1.4; enemyCount = 2; }
+  } else if(context==='legendary'){
+    const L = LEGENDARY[CITY_NATION[dest]];
+    pool = [{ name: L.name, hpBase: L.hpBase, atkBase: L.atkBase, elem: L.elem }];
+    scale = (1.4 + state.day*0.05) * ngScale;
+    isBoss = true;
   } else {
     // Encounter perjalanan: monster khas negara kota tujuan.
     pool = NATION_MONSTERS[CITY_NATION[dest]] || MONSTERS;
@@ -599,6 +604,27 @@ export function closeBattle(){
       showEvent('🏰 Wilayah Dikuasai!', `${battle.dest} kini di bawah kekuasaanmu dan akan memberi pemasukan pajak tiap kali kamu berpindah kota. +2 medali.`);
     } else {
       showEvent('Gagal Menguasai Wilayah', `Pasukan garnisun ${battle.dest} terlalu kuat. Perkuat dulu karaktermu dan coba lagi.`);
+    }
+    return;
+  }
+
+  if(battle.context==='legendary'){
+    const nation = CITY_NATION[battle.dest];
+    const L = LEGENDARY[nation];
+    if(won){
+      // Jinakkan monster legendaris jadi pasukan sangat kuat (신수).
+      state.legendaryTamed = state.legendaryTamed || {};
+      state.legendaryTamed[nation] = true;
+      const troop = { name: L.name, kind:'monster', monsterName: L.name, rank:0,
+        maxHp: Math.round(L.hpBase*1.2), hp: Math.round(L.hpBase*1.2), atk: Math.round(L.atkBase*1.1),
+        elem: L.elem, poisonChance:0, rebirthBonus:0, level:1, exp:0, expMax:50, legendary:true };
+      state.medals += 6;
+      const dest = state.generals.length < MAX_GENERALS ? state.generals : (state.barracks || (state.barracks=[]));
+      dest.push(troop);
+      const where = dest===state.generals ? 'pasukan aktif' : 'barak';
+      showEvent(`✨ ${L.name} Dijinakkan!`, `Kamu menaklukkan monster legendaris ${nation}! Ia kini bergabung di ${where} sebagai pasukan legendaris (+6 medali).`, ()=>{ if(!checkEndConditions()) render(); });
+    } else {
+      showEvent(`Gagal Berburu ${L.name}`, `Monster legendaris terlalu perkasa. Perkuat pasukanmu dan coba lagi.`, ()=>{ if(!checkEndConditions()) render(); });
     }
     return;
   }

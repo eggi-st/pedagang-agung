@@ -64,6 +64,7 @@ export function migrateState() {
   if (!state.barracks) state.barracks = []; // barak cadangan pasukan
   if (!state.storage) state.storage = [];   // gudang pusat item
   if (state.satiety == null) state.satiety = 100; // rasa lapar
+  if (!state.legendaryTamed) state.legendaryTamed = {}; // monster legendaris
   // Equip multi-slot: pindahkan armor lama (satu slot) ke slot 'badan',
   // lalu pastikan keempat slot pelindung ada.
   const eq = state.equipment;

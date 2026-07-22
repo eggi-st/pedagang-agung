@@ -298,6 +298,12 @@ export const MONSTER_SPRITE = {
   'Laba-laba Raksasa': SPRITE_SPIDER,
   'Golem Batu': SPRITE_GOLEM,
   'Pasukan Garnisun': SPRITE_GARRISON,
+  // Monster legendaris — sprite placeholder (bentuk besar yang ada, diwarnai
+  // per elemen). Bisa diganti art asli (lihat docs/prompt-gambar.md).
+  'Harimau Roh Baekdu': SPRITE_WOLF,
+  'Naga Kaisar Giok': SPRITE_SPIDER,
+  'Oni Merah Agung': SPRITE_DEMON_MERC,
+  'Gajah Perang Suci': SPRITE_GOLEM,
 };
 
 // Nama kelas (dari data/classes.js) -> template bentuknya.

@@ -8,7 +8,27 @@ import { state, setDungeonState } from '../state.js';
 import { render } from '../core/bus.js';
 import { addLog } from './character.js';
 import { startBattle, startDungeonFloor } from './battle.js';
+import { CITY_NATION } from '../data/world.js';
+import { LEGENDARY } from '../data/monsters.js';
 import { sfx } from '../audio/sfx.js';
+
+// Level minimal untuk berani memburu monster legendaris.
+export const LEGENDARY_LEVEL_REQ = 8;
+
+/** Sudah dijinakkan? (per negara kota) */
+export function legendaryTamed(city){
+  return !!(state.legendaryTamed && state.legendaryTamed[CITY_NATION[city]]);
+}
+
+/** Berburu monster legendaris negara kota ini (butuh level & belum dijinakkan). */
+export function huntLegendary(city){
+  if(city !== state.city) return;
+  if(legendaryTamed(city)) return;
+  if(state.char.level < LEGENDARY_LEVEL_REQ){ sfx('error'); return; }
+  if(!LEGENDARY[CITY_NATION[city]]) return;
+  sfx('dungeon');
+  startBattle('legendary', city);
+}
 
 export function upgradeGudang(city){
   const lvl = state.cityUpgrades[city].gudang;

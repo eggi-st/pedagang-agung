@@ -67,9 +67,11 @@ dari pemain menang.
 - ✅ **Monster khas per negara** — NATION_MONSTERS: encounter perjalanan memakai
   pool monster negara tujuan; monster yang dilawan & ditangkap beda antar negara.
   (selesai)
-- **Kota monster legendaris per negara** — lokasi khusus memunculkan monster
-  legendaris sesuai negara (mirip 신수/흉수). BELUM. Lanjutan: encounter/bos
-  legendaris unik per negara + sprite khas (nyambung ke Fase 3).
+- ✅ **Monster legendaris per negara (신수)** — LEGENDARY per negara (Harimau Roh
+  Baekdu/Naga Kaisar Giok/Oni Merah Agung/Gajah Perang Suci). "Berburu" di kota
+  (butuh Lv8+); menang = menjinakkannya jadi pasukan legendaris + 6 medali;
+  sekali per negara. Sprite masih PLACEHOLDER (bentuk besar yang ada) — prompt
+  art asli di docs/prompt-gambar.md. (mekanik selesai; art menyusul)
 - Lanjutan: stat/elemen jendral khas per negara (bukan cuma nama); monster baru
   bertema per negara dgn sprite sendiri.
 

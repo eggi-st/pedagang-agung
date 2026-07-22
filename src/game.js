@@ -28,7 +28,7 @@ import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWa
 import { renderBattle } from './ui/battle-ui.js';
 import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem, storeItem, retrieveItem } from './systems/inventory.js';
 import { recruitGeneral, moveGeneral, useRebirthStone, promoteGeneral, equipGeneralWeapon, stashToBarracks, callFromBarracks } from './systems/generals.js';
-import { upgradeGudang, upgradeBenteng, enterDungeon, attackGarrison, enterTestTown } from './systems/territory.js';
+import { upgradeGudang, upgradeBenteng, enterDungeon, attackGarrison, enterTestTown, huntLegendary } from './systems/territory.js';
 import { claimQuest, claimGuildQuest } from './systems/quests.js';
 import { render, switchTab } from './ui/render.js';
 import { checkEndConditions, endGame } from './systems/progression.js';
@@ -156,6 +156,7 @@ function startGame(nation, className, opts){
     factories: {}, processedGoods: {},
     guildQuest: null,
     tradePoints: 0, upgradeParts: 0, rebirthStones: 0,
+    legendaryTamed: {},
     lastTestTown: 0,
     goldHistory: [{day:1, gold}],
     classTransformed: false,
@@ -239,6 +240,7 @@ Object.assign(window, {
   enterDungeon,
   enterHistoricalScenario,
   enterTestTown,
+  huntLegendary,
   equipAccessory,
   equipGear,
   exchangeTP,

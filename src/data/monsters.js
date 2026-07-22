@@ -38,3 +38,17 @@ export const NATION_MONSTERS = {
   Jepang: [_byName('Prajurit Bayaran Jahat'), _byName('Laba-laba Raksasa')],
   India: [_byName('Golem Batu'), _byName('Perampok Bersenjata')],
 };
+
+// Monster LEGENDARIS per negara (신수 ala Xian). Diburu di kotanya (butuh
+// level tinggi); menang = menjinakkannya jadi pasukan sangat kuat.
+export const LEGENDARY = {
+  Joseon: { name: 'Harimau Roh Baekdu', hpBase: 140, atkBase: 22, elem: 'Angin' },
+  Ming:   { name: 'Naga Kaisar Giok',  hpBase: 160, atkBase: 24, elem: 'Air' },
+  Jepang: { name: 'Oni Merah Agung',   hpBase: 150, atkBase: 26, elem: 'Api' },
+  India:  { name: 'Gajah Perang Suci', hpBase: 170, atkBase: 23, elem: 'Bumi' },
+};
+
+export const LEGENDARY_ICON = {
+  'Harimau Roh Baekdu': '🐯', 'Naga Kaisar Giok': '🐉',
+  'Oni Merah Agung': '👹', 'Gajah Perang Suci': '🐘',
+};

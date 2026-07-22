@@ -14,6 +14,8 @@ import { guildQuestReady, guildQuestProgressNow, guildQuestLabel } from '../syst
 import { travel, travelInfo, priceTrend, restCost, eatFood, SATIETY_MAX, FOOD_COST, FOOD_RESTORE } from '../systems/economy.js';
 import { calendarFromDay } from '../data/calendar.js';
 import { CITY_NATION, NATION_LABEL } from '../data/world.js';
+import { LEGENDARY, LEGENDARY_ICON } from '../data/monsters.js';
+import { legendaryTamed, LEGENDARY_LEVEL_REQ } from '../systems/territory.js';
 import { checkAchievements } from '../systems/progression.js';
 import { saveGame } from '../systems/save.js';
 import { hpBarColor } from './battle-ui.js';
@@ -431,6 +433,16 @@ export function renderPeta(){
     let actions = '';
     if(isHere){
       actions += `<button class="teal" onclick="enterDungeon('${c}')">Jelajahi Dungeon (3 lantai, Lv ${CITY_LEVEL_RANGE[c]})</button>`;
+      // Perburuan monster legendaris negara ini.
+      const leg = LEGENDARY[CITY_NATION[c]];
+      if(leg){
+        if(legendaryTamed(c)){
+          actions += `<div style="font-size:6.5px; color:var(--gold);">${LEGENDARY_ICON[leg.name]||'✨'} ${leg.name} sudah dijinakkan.</div>`;
+        } else {
+          const bisa = state.char.level >= LEGENDARY_LEVEL_REQ;
+          actions += `<button class="purple" onclick="huntLegendary('${c}')" ${bisa?'':'disabled'}>${LEGENDARY_ICON[leg.name]||'✨'} Berburu ${leg.name} (Lv ${LEGENDARY_LEVEL_REQ}+, jinakkan jadi pasukan)</button>`;
+        }
+      }
       if(!isOwned){
         actions += `<button class="red" onclick="attackGarrison('${c}')">Kuasai Wilayah (lawan garnisun, 2 musuh)</button>`;
       } else {
