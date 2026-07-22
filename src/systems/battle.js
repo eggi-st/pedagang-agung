@@ -14,7 +14,7 @@ import { rollDrop, genItem } from './generators.js';
 import { MONSTERS, DUNGEON_MONSTERS } from '../data/monsters.js';
 import { MONSTER_SPRITE } from '../data/sprites.js';
 import { MAX_GENERALS } from '../data/mercenaries/index.js';
-import { memberAtk, memberElem } from './generals.js';
+import { memberAtk, memberElem, giveMemberExp, memberProgressFields } from './generals.js';
 import { ELEMENTS, elementMultiplier } from '../data/elements.js';
 import { WEAPONS } from '../data/economy.js';
 import { CLASS_TRANSFORMS, CLASS_TRANSFORM_LEVEL } from '../data/classes.js';
@@ -366,6 +366,14 @@ export function winBattle(){
       haptic([50,50,50,50,100]);
     }
   }
+  // EXP untuk pasukan yang ikut & masih hidup — jendral & monster naik level
+  // sendiri, bukan cuma promosi berbayar (arah "bangun pasukan").
+  const partyExp = Math.round(rand(8,16)*n);
+  state.generals.forEach((m)=>{
+    if(m.hp<=0) return;
+    const lv = giveMemberExp(m, partyExp);
+    if(lv>0) blog(`${m.name} naik ke Lv${m.level}! (+${lv*2} ATK, +${lv*8} HP maks)`);
+  });
   maybeCaptureMonster();
   renderBattle();
 }
@@ -389,7 +397,7 @@ function maybeCaptureMonster(){
   const nm = src.name.replace(/ \d+$/, '');
   const hp = Math.max(10, Math.round(src.maxHp*0.8));
   const atk = Math.max(2, Math.round(src.atk*0.8));
-  state.generals.push({ name: nm, kind:'monster', monsterName: nm, rank:0, maxHp: hp, hp, atk, elem: src.elem, poisonChance: src.poisonChance||0, rebirthBonus:0 });
+  state.generals.push({ name: nm, kind:'monster', monsterName: nm, rank:0, maxHp: hp, hp, atk, elem: src.elem, poisonChance: src.poisonChance||0, rebirthBonus:0, ...memberProgressFields() });
   state.stats.monstersCaptured = (state.stats.monstersCaptured||0)+1;
   blog(`✨ ${nm} tunduk dan bergabung dalam pasukanmu!`);
   sfx('levelup');

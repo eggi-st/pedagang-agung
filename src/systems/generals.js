@@ -57,11 +57,39 @@ export function releaseWeaponFromMembers(id) {
   state.generals.forEach((g) => { if (g.weapon === id) g.weapon = null; });
 }
 
+// EXP awal yang dibutuhkan anggota untuk naik ke level 2.
+export const MEMBER_EXPMAX = 50;
+
+/** Field level default untuk anggota pasukan baru. */
+export function memberProgressFields(){
+  return { level: 1, exp: 0, expMax: MEMBER_EXPMAX };
+}
+
+/**
+ * Beri EXP ke satu anggota; naikkan level selama cukup. Mengembalikan jumlah
+ * level yang diperoleh (0 kalau tidak naik) untuk dicatat pemanggil.
+ */
+export function giveMemberExp(m, amt){
+  if(m.level===undefined){ Object.assign(m, memberProgressFields()); }
+  m.exp += amt;
+  let gained = 0;
+  while(m.exp >= m.expMax){
+    m.exp -= m.expMax;
+    m.level++;
+    m.expMax = Math.round(m.expMax*1.3);
+    m.atk += 2;
+    m.maxHp += 8;
+    m.hp = m.maxHp;
+    gained++;
+  }
+  return gained;
+}
+
 export function recruitGeneral(idx){
   const m = state.recruits[state.city][idx];
   if(state.gold<m.price || state.generals.length>=MAX_GENERALS) { sfx('error'); return; }
   state.gold -= m.price;
-  state.generals.push({name:m.name, rank:0, maxHp:m.maxHp, hp:m.maxHp, atk:m.atk, elem:m.elem});
+  state.generals.push({name:m.name, rank:0, maxHp:m.maxHp, hp:m.maxHp, atk:m.atk, elem:m.elem, ...memberProgressFields()});
   state.recruits[state.city].splice(idx,1);
   sfx('buy');
   addLog(`Merekrut ${m.name} sebagai Prajurit ke dalam pasukan.`);

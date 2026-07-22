@@ -252,7 +252,7 @@ export function render(){
     ).join('');
     div.innerHTML = `
       <div class="merc-head row-icon"><div class="icon-box">${m.kind==='monster' ? spriteCanvasHTML('monster', eelem||'Bumi', 28, m.monsterName) : spriteCanvasHTML('general', m.rank, 28)}</div><b style="flex:1;">${m.name}${idx===0?' (Garda Depan)':''}</b><span class="merc-rank">${m.kind==='monster' ? '🐾 Peliharaan' : RANK_NAMES[m.rank]} ${ELEMENT_ICON[eelem]||''}</span></div>
-      <div style="font-size:7px; color:var(--dim);">ATK ${eatk}${armed?` <span style="color:var(--gold);">(⚔ ${armed.name})</span>`:''} · HP ${m.hp}/${m.maxHp}</div>
+      <div style="font-size:7px; color:var(--dim);">Lv${m.level||1} · ATK ${eatk}${armed?` <span style="color:var(--gold);">(⚔ ${armed.name})</span>`:''} · HP ${m.hp}/${m.maxHp}${m.expMax?` · EXP ${m.exp||0}/${m.expMax}`:''}</div>
       <div class="merc-hpbar"><div style="width:${pct}%; background:${hpBarColor(pct)};"></div></div>
       <div class="merc-weapon-row"><span>⚔ Senjata</span><select onchange="equipGeneralWeapon(${idx}, this.value)">${wpnOptions}</select></div>
       <div class="merc-formation-row">

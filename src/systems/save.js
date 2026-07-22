@@ -66,5 +66,7 @@ export function migrateState() {
   state.generals.forEach((g) => {
     if (!g.elem) g.elem = ELEMENTS[rand(0, ELEMENTS.length - 1)];
     if (g.rebirthBonus === undefined) g.rebirthBonus = 0;
+    // Level per anggota: backfill untuk save lama.
+    if (g.level === undefined) { g.level = 1; g.exp = 0; g.expMax = 50; }
   });
 }
