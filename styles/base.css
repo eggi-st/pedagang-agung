@@ -252,7 +252,7 @@ button.choice{
 .merc-card .merc-head b{ color: var(--purple); }
 .merc-hpbar{ height:7px; background:var(--panel-light); border-radius:2px; overflow:hidden; margin-top:5px;}
 .merc-hpbar > div{ height:100%; background: linear-gradient(180deg, #7de08a, var(--green)); transition: width .25s ease-out; }
-.merc-rank{ color:var(--teal); font-size:var(--fs-micro); }
+.merc-rank{ color:var(--blue); font-size:var(--fs-micro); }
 .merc-formation-row{ display:flex; gap:4px; margin-top:6px; }
 .merc-formation-row button{ margin:0; }
 
@@ -286,12 +286,12 @@ button.choice{
 .tag{ font-size:var(--fs-micro); padding:3px 6px; border-radius:2px; white-space:nowrap; }
 .tag.owned{ background:var(--green); color:#0a2b0d; }
 .tag.neutral{ background:var(--panel-light); color:var(--dim); }
-.tag.here{ background:var(--teal); color:#0a2b2b; margin-left:4px;}
+.tag.here{ background:var(--blue); color:#fff; margin-left:4px;}
 .tag.rarity-Biasa{ background:#777; color:#fff; }
 .tag.rarity-Langka{ background:var(--blue); color:#fff; }
 .tag.rarity-Legendaris{ background:var(--gold); color:#3a2a00; box-shadow:0 0 10px rgba(244,197,66,0.5); }
 .tag.type-offensive{ background:var(--red); color:#fff; }
-.tag.type-defensive{ background:var(--teal); color:#0a2b2b; }
+.tag.type-defensive{ background:var(--blue); color:#fff; }
 .tag.type-balanced{ background:var(--purple); color:#2a1a45; }
 
 /* ============================================================
@@ -331,7 +331,7 @@ button.choice{
 .quest-card{ background:var(--sunken); padding:9px; border-radius:3px; margin-bottom:6px; }
 .quest-card .qhead{ color:var(--gold); font-size:var(--fs-tiny); margin-bottom:5px; }
 .qbar{ height:7px; background:var(--panel-light); border-radius:2px; overflow:hidden; margin:5px 0; }
-.qbar > div{ height:100%; background: linear-gradient(180deg, #7fe6dc, var(--teal)); transition: width .25s ease-out; }
+.qbar > div{ height:100%; background: linear-gradient(180deg, #7db8f0, var(--blue)); transition: width .25s ease-out; }
 
 .ach-row{ display:flex; align-items:center; gap:8px; background:var(--sunken); padding:7px 8px; border-radius:3px; margin-bottom:5px; }
 .ach-row.locked{ opacity:0.35; }

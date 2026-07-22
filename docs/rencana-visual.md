@@ -97,6 +97,24 @@ disetujui sebelum diterapkan luas.
 
 ---
 
+## Track Konten & Sistem Gameplay (Xian-inspired)
+Fitur yang diminta, dipetakan ke mekanik Xian. Dikerjakan bertahap.
+- ✅ **Heal di luar pertempuran (Penginapan)** — pulihkan HP kamu + jendral,
+  biaya sesuai HP hilang. (selesai)
+- **Equip pasukan** — beri jendral senjata/aksesori sendiri (bukan cuma karakter
+  utama). Butuh: slot equip per jendral, efek stat, UI di kartu jendral.
+- **Jendral lebih dalam** — elemen & formasi lebih jelas (garda depan/belakang
+  berpengaruh), sinergi antar-jendral, tampilan pangkat & syarat promosi jelas.
+- **Dungeon lebih banyak & bervariasi** — dungeon per region, bos unik bertema,
+  tabel drop khas, kedalaman/kesulitan berjenjang (bukan 1 pool generik).
+- **Quest lebih jelas & beragam** — UI misi lebih terbaca (progress, reward,
+  lokasi), jenis misi baru (antar-barang, buru monster spesifik, kuasai wilayah),
+  rantai misi guild.
+- **Jenis monster lebih banyak** (lihat Fase 3) — sprite khas + elemen + drop.
+- **Hal menyenangkan lain (Xian):** event pasar acak (festival/kelangkaan),
+  reputasi kota berjenjang dengan manfaat, gelar/achievement lebih kaya,
+  New Game+ yang lebih bermakna, rute dagang & kapal (jangka panjang).
+
 ## Track Paralel — Gameplay (bukan visual, tapi penentu keseruan)
 - **#2 Kalah tempur ada konsekuensi** — `loseBattle` kini gratis total.
 - **#3 Tempur jatuhkan loot, bukan gold gratis** (+ skill nego) — agar dagang

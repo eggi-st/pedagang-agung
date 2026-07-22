@@ -11,7 +11,7 @@ import { craftSelection } from '../systems/inventory.js';
 import { promoteCost } from '../systems/generals.js';
 import { testTownAvailable } from '../systems/territory.js';
 import { guildQuestReady, guildQuestProgressNow, guildQuestLabel } from '../systems/generators.js';
-import { travel, priceTrend } from '../systems/economy.js';
+import { travel, priceTrend, restCost } from '../systems/economy.js';
 import { checkAchievements } from '../systems/progression.js';
 import { saveGame } from '../systems/save.js';
 import { hpBarColor } from './battle-ui.js';
@@ -140,6 +140,14 @@ export function render(){
       <button class="mini-btn gold" onclick="buyPotion()" ${state.gold<25?'disabled':''}>Beli</button>
     </div>`;
 
+  const rc = restCost();
+  document.getElementById('inn-list').innerHTML = `
+    <div class="row">
+      <div class="row-name">Istirahat & Pulihkan HP<small>Pulihkan HP kamu &amp; seluruh jendral ke penuh. Biaya sesuai HP yang hilang.</small></div>
+      <div class="price">${rc}g</div>
+      <button class="mini-btn green" onclick="restAtInn()" ${rc<=0 || state.gold<rc ? 'disabled':''}>${rc<=0?'HP Penuh':'Istirahat'}</button>
+    </div>`;
+
   const rList = document.getElementById('recruit-list');
   rList.innerHTML = '';
   state.recruits[state.city].forEach((m,idx)=>{
@@ -226,7 +234,7 @@ export function render(){
       </div>
       ${canPromote ? `<button class="mini-btn gold" style="width:100%; margin-top:6px;" onclick="promoteGeneral(${idx})" ${(state.gold<cost.gold||state.medals<cost.medals||(state.upgradeParts||0)<cost.parts)?'disabled':''}>Promosikan (${cost.gold}g + ${cost.medals} medali${cost.parts>0 ? ' + '+cost.parts+' part':''})</button>` : '<div style="font-size:6.5px;color:var(--gold);margin-top:4px;">Pangkat tertinggi tercapai</div>'}
       <button class="mini-btn orange" style="width:100%; margin-top:4px;" onclick="useRebirthStone(${idx})" ${(state.rebirthStones||0)<=0?'disabled':''}>💎 Pakai Rebirth Stone (punya: ${state.rebirthStones||0})</button>
-      ${m.rebirthBonus ? `<div style="font-size:6.5px; color:var(--orange); margin-top:2px;">Rebirth bonus: +${m.rebirthBonus} ATK/HP</div>` : ''}
+      ${m.rebirthBonus ? `<div style="font-size:6.5px; color:var(--gold); margin-top:2px;">Rebirth bonus: +${m.rebirthBonus} ATK/HP</div>` : ''}
     `;
     mList.appendChild(div);
   });
@@ -354,7 +362,7 @@ export function renderPeta(){
         if(blvl<3){
           actions += `<button class="gold" onclick="upgradeBenteng('${c}')" ${state.gold<bcost?'disabled':''}>Upgrade Benteng (Lv${blvl}→${blvl+1}, ${bcost}g) — cegah direbut kembali</button>`;
         } else {
-          actions += `<div style="font-size:6.5px; color:var(--teal);">Benteng level maksimal</div>`;
+          actions += `<div style="font-size:6.5px; color:var(--blue);">Benteng level maksimal</div>`;
         }
       }
       const q = state.quests[c];

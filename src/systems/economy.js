@@ -130,6 +130,28 @@ export function buyPotion() {
   render();
 }
 
+// ---------- PENGINAPAN (heal di luar pertempuran) ----------
+
+/** Biaya memulihkan HP kamu + seluruh jendral ke penuh: 0,5 gold per HP hilang. */
+export function restCost() {
+  let missing = Math.max(0, state.char.maxHp - state.char.hp);
+  state.generals.forEach((g) => { missing += Math.max(0, g.maxHp - g.hp); });
+  return Math.ceil(missing * 0.5);
+}
+
+export function restAtInn() {
+  const cost = restCost();
+  if (cost <= 0) return;                       // sudah penuh
+  if (state.gold < cost) { sfx('error'); return; }
+  state.gold -= cost;
+  state.char.hp = state.char.maxHp;
+  state.char.poison = null;
+  state.generals.forEach((g) => { g.hp = g.maxHp; g.poison = null; });
+  sfx('buy');
+  addLog(`Beristirahat di penginapan seharga ${cost}g. HP kamu & pasukan pulih penuh.`);
+  render();
+}
+
 // ---------- PABRIK PENGOLAHAN ----------
 
 export function startProduction(recipeId) {

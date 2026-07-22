@@ -23,7 +23,7 @@ import { addLog } from './systems/character.js';
 import { genPrices, genRecruits, genQuest, genGuildQuest } from './systems/generators.js';
 import { registerHooks } from './core/bus.js';
 import { showEvent, closeEvent } from './ui/overlay.js';
-import { buy, sell, buyGear, equipGear, sellGear, buyPotion, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
+import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
 import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee } from './systems/battle.js';
 import { renderBattle } from './ui/battle-ui.js';
 import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem } from './systems/inventory.js';
@@ -217,6 +217,7 @@ Object.assign(window, {
   buy,
   buyGear,
   buyPotion,
+  restAtInn,
   chooseClass,
   chooseNation,
   claimGuildQuest,
