@@ -20,12 +20,17 @@ import { CITIES } from '../data/world.js';
 import { sfx } from '../audio/sfx.js';
 
 // Parameter pasar. Semua relatif terhadap baseline kota, bukan angka mutlak.
-const SELL_IMPACT = 0.055; // tiap unit dijual: harga turun 5,5%
-const BUY_IMPACT = 0.03;   // tiap unit dibeli: harga naik 3%
-const RECOVERY = 0.18;     // tiap hari: 18% jarak ke baseline ditutup
-const NOISE = 4;           // ±4% derau harian
-const FLOOR_MULT = 0.4;    // harga tak boleh jatuh di bawah 40% baseline
-const CAP_MULT = 1.8;      // harga tak boleh naik di atas 180% baseline
+//
+// Harga disimpan sebagai PECAHAN di dalam state.prices dan hanya dibulatkan
+// saat ditampilkan/dibayar. Ini membuat dampak per transaksi terasa halus &
+// rasional: barang murah bergerak pelan (satu penjualan tidak mengguncang
+// pasar), tanpa lompatan paksa ±1 yang dulu bikin harga anjlok berlebihan.
+const SELL_IMPACT = 0.03;  // tiap unit dijual: harga turun 3%
+const BUY_IMPACT = 0.02;   // tiap unit dibeli: harga naik 2%
+const RECOVERY = 0.15;     // tiap hari: 15% jarak ke baseline ditutup
+const NOISE = 3;           // ±3% derau harian
+const FLOOR_MULT = 0.5;    // harga tak jatuh di bawah 50% baseline
+const CAP_MULT = 1.6;      // harga tak naik di atas 160% baseline
 
 /** Harga "wajar" sebuah barang di sebuah kota. Aman untuk save lama. */
 function baseline(city, id) {
@@ -53,12 +58,10 @@ export function buy(id) {
   if (state.gold < price || state.cap >= state.capMax) { sfx('error'); return; }
   state.gold -= price; state.inventory[id]++; state.cap++;
   state.reputation[state.city] = (state.reputation[state.city] || 0) + 1;
-  // Permintaanmu menaikkan harga di kota ini — minimal +1 supaya terasa juga
-  // di barang murah, dibatasi CAP_MULT × baseline.
+  // Permintaanmu menaikkan harga di kota ini, dibatasi CAP_MULT × baseline.
   {
-    const cap = Math.round(baseline(state.city, id) * CAP_MULT);
-    const cur = state.prices[state.city][id];
-    state.prices[state.city][id] = Math.min(cap, Math.max(cur + 1, Math.round(cur * (1 + BUY_IMPACT))));
+    const cap = baseline(state.city, id) * CAP_MULT;
+    state.prices[state.city][id] = Math.min(cap, state.prices[state.city][id] * (1 + BUY_IMPACT));
   }
   sfx('buy');
   render();
@@ -72,12 +75,10 @@ export function sell(id) {
   gainGold(price); state.inventory[id]--; state.cap--;
   state.reputation[state.city] = (state.reputation[state.city] || 0) + 1;
   state.tradePoints = (state.tradePoints || 0) + 1;
-  // Pasokanmu menekan harga di kota ini — minimal -1 supaya terasa juga di
-  // barang murah, tak jatuh di bawah FLOOR_MULT × baseline.
+  // Pasokanmu menekan harga di kota ini, tak jatuh di bawah FLOOR_MULT × baseline.
   {
-    const floor = Math.max(3, Math.round(baseline(state.city, id) * FLOOR_MULT));
-    const cur = state.prices[state.city][id];
-    state.prices[state.city][id] = Math.max(floor, Math.min(cur - 1, Math.round(cur * (1 - SELL_IMPACT))));
+    const floor = Math.max(3, baseline(state.city, id) * FLOOR_MULT);
+    state.prices[state.city][id] = Math.max(floor, state.prices[state.city][id] * (1 - SELL_IMPACT));
   }
   const q = state.quests[state.city];
   if (q && q.type === 'sell' && q.goodId === id && q.progress < q.target) { q.progress++; }
@@ -200,7 +201,7 @@ export function travel(dest) {
       const target = baseline(city, g.id);
       let next = cur + (target - cur) * RECOVERY;
       next *= 1 + rand(-NOISE, NOISE) / 100;
-      cityPrices[g.id] = Math.max(3, Math.round(next));
+      cityPrices[g.id] = Math.max(3, next); // pecahan; dibulatkan hanya saat ditampilkan
     });
   });
 
@@ -209,7 +210,7 @@ export function travel(dest) {
   if (Math.random() < 0.12) {
     const g = GOODS[rand(0, GOODS.length - 1)];
     const shortage = Math.random() < 0.5;
-    prices[g.id] = Math.max(3, Math.round(prices[g.id] * (shortage ? 1.6 : 0.55)));
+    prices[g.id] = Math.max(3, prices[g.id] * (shortage ? 1.6 : 0.55));
     eventMsg = shortage ? `Kelangkaan ${g.name} di ${dest}! Harga melonjak.` : `Panen ${g.name} melimpah di ${dest}! Harga anjlok.`;
   }
 
