@@ -28,6 +28,13 @@ export function monsterIcon(name) {
   return MONSTER_ICON[base] || '👹';
 }
 
-// TODO (Fase 7): tambah lebih banyak jenis musuh, idealnya dikelompokkan
-// per region/negara dengan tabel drop unik masing-masing, alih-alih
-// satu pool generik yang dipakai semua tempat seperti sekarang.
+// Monster encounter perjalanan BERBEDA per negara — tiap wilayah punya
+// makhluk khasnya. startBattle('travel') memilih pool sesuai negara kota
+// saat ini, jadi monster yang dilawan (dan ditangkap) berbeda antar negara.
+const _byName = (n) => [...MONSTERS, ...DUNGEON_MONSTERS].find((m) => m.name === n);
+export const NATION_MONSTERS = {
+  Joseon: [_byName('Bandit Jalanan'), _byName('Serigala Hutan')],
+  Ming: [_byName('Perampok Bersenjata'), _byName('Roh Gua')],
+  Jepang: [_byName('Prajurit Bayaran Jahat'), _byName('Laba-laba Raksasa')],
+  India: [_byName('Golem Batu'), _byName('Perampok Bersenjata')],
+};

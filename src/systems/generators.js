@@ -6,7 +6,7 @@ import { state } from '../state.js';
 import { rand } from '../core/rng.js';
 import { GOODS } from '../data/economy.js';
 import { ELEMENTS } from '../data/elements.js';
-import { MERC_NAMES } from '../data/mercenaries/index.js';
+import { MERC_NAMES, NATION_MERCS } from '../data/mercenaries/index.js';
 import { RARITY_RANGE, RARITY_SELL, ITEM_TYPE_NAMES } from '../data/items.js';
 
 export function genPrices() {
@@ -15,10 +15,11 @@ export function genPrices() {
   return p;
 }
 
-export function genRecruits() {
+export function genRecruits(nation) {
+  const names = NATION_MERCS[nation] || MERC_NAMES;
   const pool = [];
   for (let i = 0; i < 2; i++) {
-    const name = MERC_NAMES[rand(0, MERC_NAMES.length - 1)];
+    const name = names[rand(0, names.length - 1)];
     const tier = rand(1, 3);
     const elem = ELEMENTS[rand(0, ELEMENTS.length - 1)];
     pool.push({ name: name, maxHp: 20 + tier * 15, atk: 4 + tier * 4, price: 60 + tier * 70, elem });

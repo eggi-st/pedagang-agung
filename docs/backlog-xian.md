@@ -61,12 +61,16 @@ dari pemain menang.
   sekaligus mengisi lubang "tekanan/konsekuensi".
 
 ### B. Konten per-Negara (ingatan)
-- **Jendral khas per negara** — Joseon/China/Jepang (+ mungky Taiwan/India/
-  Mongolia) punya roster jendral sendiri.
-- **Monster khas per negara** — tiap wilayah punya monster sendiri untuk
-  dilawan & ditangkap.
+- ✅ **Jendral khas per negara** — NATION_MERCS: Joseon/Ming/Jepang/India punya
+  roster nama jendral sendiri; genRecruits(nation) memilih sesuai kota. (selesai)
+- ✅ **Monster khas per negara** — NATION_MONSTERS: encounter perjalanan memakai
+  pool monster negara tujuan; monster yang dilawan & ditangkap beda antar negara.
+  (selesai)
 - **Kota monster legendaris per negara** — lokasi khusus memunculkan monster
-  legendaris sesuai negara (mirip 신수/흉수 yang ter-gate di Xian).
+  legendaris sesuai negara (mirip 신수/흉수). BELUM. Lanjutan: encounter/bos
+  legendaris unik per negara + sprite khas (nyambung ke Fase 3).
+- Lanjutan: stat/elemen jendral khas per negara (bukan cuma nama); monster baru
+  bertema per negara dgn sprite sendiri.
 
 ### C. Kedalaman Jendral
 - **Equip utama per jendral** (ingatan) — tiap jendral punya senjata/pusaka

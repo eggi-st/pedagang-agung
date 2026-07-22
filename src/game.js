@@ -11,7 +11,7 @@
 // ============================================================
 
 import { GOODS, FACTORY_RECIPES } from './data/economy.js';
-import { CITIES } from './data/world.js';
+import { CITIES, CITY_NATION } from './data/world.js';
 import { CLASSES } from './data/classes.js';
 import { toggleMute as toggleMuteBase } from './audio/sfx.js';
 import { playMusic, toggleMusic as toggleMusicBase } from './audio/music.js';
@@ -167,7 +167,7 @@ function startGame(nation, className, opts){
     state.prices[c] = genPrices();
     // Baseline = harga awal kota ini; harga akan pulih ke sini seiring hari.
     state.basePrices[c] = { ...state.prices[c] };
-    state.recruits[c] = genRecruits();
+    state.recruits[c] = genRecruits(CITY_NATION[c]);
     state.reputation[c] = 0;
     state.cityUpgrades[c] = { gudang: 0, benteng: 0 };
     state.quests[c] = genQuest();

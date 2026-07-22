@@ -274,7 +274,7 @@ export function travel(dest) {
     eventMsg = shortage ? `Kelangkaan ${g.name} di ${dest}! Harga melonjak.` : `Panen ${g.name} melimpah di ${dest}! Harga anjlok.`;
   }
 
-  if (!state.recruits[dest] || state.recruits[dest].length === 0) state.recruits[dest] = genRecruits();
+  if (!state.recruits[dest] || state.recruits[dest].length === 0) state.recruits[dest] = genRecruits(CITY_NATION[dest]);
 
   // Semua pabrik yang dimiliki berjalan otomatis; panen yang sudah selesai.
   CITIES.forEach((c) => {

@@ -11,7 +11,8 @@ import { render, renderBattle, checkEndConditions, endGame } from '../core/bus.j
 import { showEvent } from '../ui/overlay.js';
 import { addLog, gainGold, getAtk, getDef } from './character.js';
 import { rollDrop, genItem } from './generators.js';
-import { MONSTERS, DUNGEON_MONSTERS } from '../data/monsters.js';
+import { MONSTERS, DUNGEON_MONSTERS, NATION_MONSTERS } from '../data/monsters.js';
+import { CITY_NATION } from '../data/world.js';
 import { MONSTER_SPRITE } from '../data/sprites.js';
 import { MAX_GENERALS } from '../data/mercenaries/index.js';
 import { memberAtk, memberElem, giveMemberExp, memberProgressFields } from './generals.js';
@@ -46,7 +47,8 @@ export function startBattle(context, dest){
     isBoss = dungeonState.floor===dungeonState.maxFloor;
     if(isBoss){ scale *= 1.4; enemyCount = 2; }
   } else {
-    pool = MONSTERS;
+    // Encounter perjalanan: monster khas negara kota tujuan.
+    pool = NATION_MONSTERS[CITY_NATION[dest]] || MONSTERS;
     scale = (1 + state.day*0.05) * ngScale;
   }
   const enemies = [];

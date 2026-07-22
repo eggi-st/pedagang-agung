@@ -1,21 +1,14 @@
-// STATUS SAAT INI: satu pool nama mercenary generik dipakai semua negara.
-//
-// TODO (Fase 7 — konten besar, lihat rencana-migrasi-claude-code.md):
-// Pecah ini jadi roster BERBEDA per negara asal, mis:
-//   joseon.js  -> unit ala Korea (Hwarang, dst)
-//   china.js   -> unit ala China (Shaolin, dst)
-//   jepang.js  -> unit ala Jepang (Ronin, dst)
-// lalu di genRecruits(nation) pilih dari roster sesuai `state.nation`,
-// bukan dari MERC_NAMES generik seperti sekarang.
+// Roster jendral berbeda per NEGARA asal kota tempat kamu merekrut.
+// genRecruits(nation) memilih dari pool negara itu.
+export const NATION_MERCS = {
+  Joseon: ['Prajurit Hwarang', 'Pemanah Joseon', 'Pendekar Taekkyon', 'Perisai Baja'],
+  Ming: ['Pendekar Shaolin', 'Biksu Petarung', 'Pengawal Kaisar', 'Panah Terbang'],
+  Jepang: ['Ronin Pengembara', 'Samurai Bayaran', 'Ninja Bayangan', 'Ashigaru'],
+  India: ['Pendekar Kalari', 'Penjaga Kuil', 'Pemanah Rajput', 'Naga Sakti'],
+};
 
-export const MERC_NAMES = [
-  'Prajurit Hwarang',
-  'Pendekar Shaolin',
-  'Ronin Pengembara',
-  'Pemanah Elit',
-  'Perisai Baja',
-  'Biksu Petarung',
-];
+// Pool gabungan (fallback bila negara tak dikenal).
+export const MERC_NAMES = [...new Set(Object.values(NATION_MERCS).flat())];
 
 export const RANK_NAMES = ['Prajurit', 'Perwira', 'Kapten', 'Jendral', 'Jendral Agung', 'Legenda Perang'];
 export const RANK_ICON = ['🪖', '💂', '🎖️', '⚔️', '👑', '🌟'];
