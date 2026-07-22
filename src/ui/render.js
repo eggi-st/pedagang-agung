@@ -18,7 +18,7 @@ import { hpBarColor } from './battle-ui.js';
 import { drawPixelSprite, spriteCanvasHTML, paintAllSprites } from './sprites.js';
 import { SPRITE_HUMANOID, SKIN_TONE } from '../data/sprites.js';
 import { NATION_BODY_COLOR, CLASS_TRANSFORMS } from '../data/classes.js';
-import { GOODS, WEAPONS, ARMORS, FACTORY_RECIPES, ELITE_EXCHANGES } from '../data/economy.js';
+import { GOODS, WEAPONS, ARMORS, ARMOR_SLOTS, FACTORY_RECIPES, ELITE_EXCHANGES } from '../data/economy.js';
 import { ELEMENT_ICON } from '../data/elements.js';
 import { MAX_GENERALS, RANK_NAMES } from '../data/mercenaries/index.js';
 import { TYPE_ICON, TYPE_LABEL, RARITY_ORDER, DIAGRAMS } from '../data/items.js';
@@ -67,7 +67,12 @@ export function render(){
   document.getElementById('player-nation-label').textContent = `${displayClassName} · ${state.nation}`;
 
   document.getElementById('eq-weapon').textContent = state.equipment.weapon ? WEAPONS.find(w=>w.id===state.equipment.weapon).name : 'Kosong';
-  document.getElementById('eq-armor').textContent = state.equipment.armor ? ARMORS.find(a=>a.id===state.equipment.armor).name : 'Kosong';
+  ARMOR_SLOTS.forEach(({key})=>{
+    const id = state.equipment[key];
+    const nm = id ? (ARMORS.find(a=>a.id===id)||{}).name || 'Kosong' : 'Kosong';
+    const slotEl = document.getElementById('eq-'+key);
+    if(slotEl) slotEl.textContent = nm;
+  });
   const acc1 = state.equipment.accessory1 ? state.items.find(i=>i.uid===state.equipment.accessory1) : null;
   const acc2 = state.equipment.accessory2 ? state.items.find(i=>i.uid===state.equipment.accessory2) : null;
   document.getElementById('eq-acc1').textContent = acc1 ? acc1.name : 'Kosong';
@@ -119,19 +124,28 @@ export function render(){
   });
   const aList = document.getElementById('armor-list');
   aList.innerHTML = '';
-  const baseDefNoArmor = getDef() - currentArmorDef();
-  ARMORS.forEach(a=>{
-    const isOwned = state.ownedArmors.includes(a.id);
-    const isEquipped = state.equipment.armor===a.id;
-    const previewDef = baseDefNoArmor + a.def;
-    const row = document.createElement('div');
-    row.className='row';
-    let btns = '';
-    if(isEquipped){ btns = `<span style="color:var(--dim); font-size:7px;">Terpasang</span>`; }
-    else if(isOwned){ btns = `<button class="mini-btn teal" onclick="equipGear('armor','${a.id}')">Pakai</button><button class="mini-btn red" onclick="sellGear('armor','${a.id}')">Jual</button>`; }
-    else { btns = `<button class="mini-btn gold" onclick="buyGear('armor','${a.id}')" ${state.gold<a.price?'disabled':''}>Beli ${a.price}g</button>`; }
-    row.innerHTML = `<div class="row-name">${a.name}<small>DEF +${a.def} · total jadi ${previewDef}</small></div>${btns}`;
-    aList.appendChild(row);
+  ARMOR_SLOTS.forEach(({key, label})=>{
+    const head = document.createElement('div');
+    head.style.cssText = 'font-size:var(--fs-micro); color:var(--dim); margin:8px 0 3px;';
+    head.textContent = label;
+    aList.appendChild(head);
+    // DEF total kalau slot ini dikosongkan dulu (untuk pratinjau "total jadi").
+    const eqId = state.equipment[key];
+    const eqDef = eqId ? ((ARMORS.find(x=>x.id===eqId)||{}).def || 0) : 0;
+    const baseDefNoSlot = getDef() - eqDef;
+    ARMORS.filter(a=>a.slot===key).forEach(a=>{
+      const isOwned = state.ownedArmors.includes(a.id);
+      const isEquipped = state.equipment[key]===a.id;
+      const previewDef = baseDefNoSlot + a.def;
+      const row = document.createElement('div');
+      row.className='row';
+      let btns = '';
+      if(isEquipped){ btns = `<span style="color:var(--dim); font-size:7px;">Terpasang</span>`; }
+      else if(isOwned){ btns = `<button class="mini-btn teal" onclick="equipGear('${key}','${a.id}')">Pakai</button><button class="mini-btn red" onclick="sellGear('${key}','${a.id}')">Jual</button>`; }
+      else { btns = `<button class="mini-btn gold" onclick="buyGear('${key}','${a.id}')" ${state.gold<a.price?'disabled':''}>Beli ${a.price}g</button>`; }
+      row.innerHTML = `<div class="row-name">${a.name}<small>DEF +${a.def} · total jadi ${previewDef}</small></div>${btns}`;
+      aList.appendChild(row);
+    });
   });
   document.getElementById('potion-list').innerHTML = `
     <div class="row">
@@ -167,7 +181,11 @@ export function render(){
 
   const gearInv = document.getElementById('gear-inventory');
   const ownedSpareWeapons = state.ownedWeapons.filter(id=>id!==state.equipment.weapon);
-  const ownedSpareArmors = state.ownedArmors.filter(id=>id!==state.equipment.armor);
+  // Armor cadangan = dimiliki tapi tidak sedang terpasang di slot-nya sendiri.
+  const ownedSpareArmors = state.ownedArmors.filter(id=>{
+    const a = ARMORS.find(x=>x.id===id);
+    return a && state.equipment[a.slot] !== id;
+  });
   gearInv.innerHTML = '';
   if(ownedSpareWeapons.length===0 && ownedSpareArmors.length===0){
     gearInv.innerHTML = '<div style="color:var(--dim); font-size:8px;">Semua gear yang dimiliki sedang terpasang.</div>';
@@ -181,9 +199,10 @@ export function render(){
   });
   ownedSpareArmors.forEach(id=>{
     const a = ARMORS.find(x=>x.id===id);
+    const slotLabel = (ARMOR_SLOTS.find(s=>s.key===a.slot)||{}).label || 'Pelindung';
     const row = document.createElement('div');
     row.className='row';
-    row.innerHTML = `<div class="row-name">${a.name}<small>Zirah cadangan · DEF +${a.def}</small></div><button class="mini-btn teal" onclick="equipGear('armor','${id}')">Pakai</button><button class="mini-btn red" onclick="sellGear('armor','${id}')">Jual</button>`;
+    row.innerHTML = `<div class="row-name">${a.name}<small>${slotLabel} cadangan · DEF +${a.def}</small></div><button class="mini-btn teal" onclick="equipGear('${a.slot}','${id}')">Pakai</button><button class="mini-btn red" onclick="sellGear('${a.slot}','${id}')">Jual</button>`;
     gearInv.appendChild(row);
   });
 

@@ -101,8 +101,12 @@ disetujui sebelum diterapkan luas.
 Fitur yang diminta, dipetakan ke mekanik Xian. Dikerjakan bertahap.
 - ✅ **Heal di luar pertempuran (Penginapan)** — pulihkan HP kamu + jendral,
   biaya sesuai HP hilang. (selesai)
-- **Equip pasukan** — beri jendral senjata/aksesori sendiri (bukan cuma karakter
-  utama). Butuh: slot equip per jendral, efek stat, UI di kartu jendral.
+- ✅ **Equip karakter diperdalam** — slot tubuh: senjata, kepala, badan, celana,
+  sepatu + 2 aksesoris; toko per-slot, DEF menjumlah, migrasi save lama. (selesai)
+- **Equip pasukan (jendral)** — beri jendral senjata/aksesori sendiri (bukan cuma
+  karakter utama). Butuh: slot equip per jendral, efek stat, UI di kartu jendral.
+- **Slot tambahan (dan lainnya)** — sarung tangan, jubah/cape, cincin; efek stat
+  khusus per slot (mis. sepatu → AGI).
 - **Jendral lebih dalam** — elemen & formasi lebih jelas (garda depan/belakang
   berpengaruh), sinergi antar-jendral, tampilan pangkat & syarat promosi jelas.
 - **Dungeon lebih banyak & bervariasi** — dungeon per region, bos unik bertema,

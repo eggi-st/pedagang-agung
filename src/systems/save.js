@@ -49,6 +49,13 @@ export function migrateState() {
   if (state.lastTestTown === undefined) state.lastTestTown = Math.max(0, state.day - 7);
   if (!state.goldHistory) state.goldHistory = [{ day: state.day, gold: state.gold }];
   if (!state.playerName) state.playerName = 'Saudagar Kelana'; // save lama tanpa nama
+  // Equip multi-slot: pindahkan armor lama (satu slot) ke slot 'badan',
+  // lalu pastikan keempat slot pelindung ada.
+  const eq = state.equipment;
+  if (eq) {
+    if (eq.armor !== undefined) { if (eq.badan == null) eq.badan = eq.armor; delete eq.armor; }
+    ['kepala', 'badan', 'celana', 'sepatu'].forEach((s) => { if (eq[s] === undefined) eq[s] = null; });
+  }
   // Save lama belum punya baseline harga: pakai harga saat ini sebagai patokan.
   if (!state.basePrices) state.basePrices = {};
   CITIES.forEach((c) => {

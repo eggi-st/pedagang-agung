@@ -140,7 +140,7 @@ function startGame(nation, className, opts){
     char: { level:1, exp:0, expMax:100, hp: baseHp, maxHp: baseHp, str, int, agi, luk, classAtkBonus: cls.atkFlat||0 },
     classDiscountPct: cls.discountPct||0,
     classExpBonusPct: cls.expPct||0,
-    equipment: { weapon:null, armor:null, accessory1:null, accessory2:null },
+    equipment: { weapon:null, kepala:null, badan:null, celana:null, sepatu:null, accessory1:null, accessory2:null },
     ownedWeapons: [], ownedArmors: [],
     potions: 2,
     generals: [],
