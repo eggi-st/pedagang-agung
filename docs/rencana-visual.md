@@ -103,6 +103,10 @@ Fitur yang diminta, dipetakan ke mekanik Xian. Dikerjakan bertahap.
   biaya sesuai HP hilang. (selesai)
 - ✅ **Equip karakter diperdalam** — slot tubuh: senjata, kepala, badan, celana,
   sepatu + 2 aksesoris; toko per-slot, DEF menjumlah, migrasi save lama. (selesai)
+- ✅ **Pasukan monster (몬스터 고용)** — peluang menangkap monster kalah jadi
+  pasukan (travel/dungeon/testtown non-bos, LUK menaikkan peluang); ikut bertempur
+  dengan sprite monster, bisa formasi & heal. (selesai)
+  Lanjutan: item "batu segel" untuk agency penangkapan; monster khas per region.
 - **Equip pasukan (jendral)** — beri jendral senjata/aksesori sendiri (bukan cuma
   karakter utama). Butuh: slot equip per jendral, efek stat, UI di kartu jendral.
 - **Slot tambahan (dan lainnya)** — sarung tangan, jubah/cape, cincin; efek stat

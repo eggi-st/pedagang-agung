@@ -244,7 +244,7 @@ export function render(){
     const cost = promoteCost(m);
     const canPromote = m.rank < RANK_NAMES.length-1;
     div.innerHTML = `
-      <div class="merc-head row-icon"><div class="icon-box">${spriteCanvasHTML('general', m.rank, 28)}</div><b style="flex:1;">${m.name}${idx===0?' (Garda Depan)':''}</b><span class="merc-rank">${RANK_NAMES[m.rank]} ${ELEMENT_ICON[m.elem]||''}</span></div>
+      <div class="merc-head row-icon"><div class="icon-box">${m.kind==='monster' ? spriteCanvasHTML('monster', m.elem||'Bumi', 28, m.monsterName) : spriteCanvasHTML('general', m.rank, 28)}</div><b style="flex:1;">${m.name}${idx===0?' (Garda Depan)':''}</b><span class="merc-rank">${m.kind==='monster' ? '🐾 Peliharaan' : RANK_NAMES[m.rank]} ${ELEMENT_ICON[m.elem]||''}</span></div>
       <div style="font-size:7px; color:var(--dim);">ATK ${m.atk} · HP ${m.hp}/${m.maxHp}</div>
       <div class="merc-hpbar"><div style="width:${pct}%; background:${hpBarColor(pct)};"></div></div>
       <div class="merc-formation-row">

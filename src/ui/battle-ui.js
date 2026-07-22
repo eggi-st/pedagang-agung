@@ -37,7 +37,7 @@ export function renderBattle(){
   state.generals.forEach((m,idx)=>{
     const pct = Math.max(0,Math.round(m.hp/m.maxHp*100));
     html += `<div class="actor ${battle.flashTargets.has('gen'+idx)?'hit-flash':''}"><div class="actor-row">
-      <div class="icon-box">${spriteCanvasHTML('general', m.rank, 28)}</div>
+      <div class="icon-box">${m.kind==='monster' ? spriteCanvasHTML('monster', m.elem||'Bumi', 28, m.monsterName) : spriteCanvasHTML('general', m.rank, 28)}</div>
       <div class="actor-body"><div class="name"><b>${m.name}${idx===0?' 🛡':''}</b><span>${m.hp}/${m.maxHp} HP ${statusTag(m)}${elemTag(m.elem)}</span></div><div class="hpbar"><div style="width:${pct}%; background:${hpBarColor(pct)};"></div></div></div>
     </div></div>`;
   });

@@ -12,6 +12,8 @@ import { showEvent } from '../ui/overlay.js';
 import { addLog, gainGold, getAtk, getDef } from './character.js';
 import { rollDrop, genItem } from './generators.js';
 import { MONSTERS, DUNGEON_MONSTERS } from '../data/monsters.js';
+import { MONSTER_SPRITE } from '../data/sprites.js';
+import { MAX_GENERALS } from '../data/mercenaries/index.js';
 import { ELEMENTS, elementMultiplier } from '../data/elements.js';
 import { WEAPONS } from '../data/economy.js';
 import { CLASS_TRANSFORMS, CLASS_TRANSFORM_LEVEL } from '../data/classes.js';
@@ -363,7 +365,33 @@ export function winBattle(){
       haptic([50,50,50,50,100]);
     }
   }
+  maybeCaptureMonster();
   renderBattle();
+}
+
+/**
+ * Peluang menangkap satu monster yang kalah menjadi pasukan (몬스터 고용
+ * ala Xian). Hanya pada perjalanan/dungeon/test town non-bos, kalau masih
+ * ada slot pasukan. Monster tangkapan sedikit lebih lemah dari versi musuh.
+ */
+function maybeCaptureMonster(){
+  if(state.generals.length >= MAX_GENERALS) return;
+  if(!['travel','dungeon','testtown'].includes(battle.context) || battle.isBoss) return;
+  const capturable = battle.enemies.filter(e=>{
+    const nm = e.name.replace(/ \d+$/, '');
+    return e.hp<=0 && nm!=='Pasukan Garnisun' && MONSTER_SPRITE[nm];
+  });
+  if(!capturable.length) return;
+  const chance = Math.min(0.5, 0.18 + luckValue()*0.01);
+  if(Math.random() >= chance) return;
+  const src = capturable[rand(0, capturable.length-1)];
+  const nm = src.name.replace(/ \d+$/, '');
+  const hp = Math.max(10, Math.round(src.maxHp*0.8));
+  const atk = Math.max(2, Math.round(src.atk*0.8));
+  state.generals.push({ name: nm, kind:'monster', monsterName: nm, rank:0, maxHp: hp, hp, atk, elem: src.elem, poisonChance: src.poisonChance||0, rebirthBonus:0 });
+  state.stats.monstersCaptured = (state.stats.monstersCaptured||0)+1;
+  blog(`✨ ${nm} tunduk dan bergabung dalam pasukanmu!`);
+  sfx('levelup');
 }
 
 export function loseBattle(){
