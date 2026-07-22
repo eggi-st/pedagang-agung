@@ -24,7 +24,7 @@ import { genPrices, genRecruits, genQuest, genGuildQuest } from './systems/gener
 import { registerHooks } from './core/bus.js';
 import { showEvent, closeEvent } from './ui/overlay.js';
 import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, buyFactory, startProduction, sellProcessed, exchangeTP, enterHistoricalScenario } from './systems/economy.js';
-import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee } from './systems/battle.js';
+import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee, useGeneralSkill } from './systems/battle.js';
 import { renderBattle } from './ui/battle-ui.js';
 import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem, storeItem, retrieveItem } from './systems/inventory.js';
 import { recruitGeneral, moveGeneral, useRebirthStone, promoteGeneral, equipGeneralWeapon, stashToBarracks, callFromBarracks } from './systems/generals.js';
@@ -213,6 +213,7 @@ Object.assign(window, {
   battleAttack,
   battleDefend,
   battleFlee,
+  useGeneralSkill,
   battleSkillHeavy,
   battleSkillTransform,
   battleSkillWarcry,

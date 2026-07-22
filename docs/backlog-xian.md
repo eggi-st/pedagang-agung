@@ -90,12 +90,13 @@ dari pemain menang.
   gudang/barak per hari (tekanan upkeep).
 
 ### E. Sistem Tempur v2
-- Urutan giliran berdasarkan AGI (kecepatan), bukan fixed.
-- Formasi depan/belakang benar-benar menentukan siapa kena (garda depan
-  melindungi belakang).
-- Skill jendral aktif (pemain memicu), memanfaatkan C.
-- Combo antar-jendral (C) & kedalaman elemen (asimetri).
-- Target selection & info elemen yang jelas.
+- ✅ **Skill jendral aktif** — tiap anggota (jendral & monster) punya skill khas
+  ELEMEN-nya (Api=AOE, Petir=nuke tunggal, Angin=2x hit, Air=heal pasukan,
+  Bumi=Dinding Batu -40% damage), dipicu pemain, 1x per tempur. (selesai)
+- **Combo antar-jendral** — sinergi/serangan gabungan saat kombinasi tertentu.
+- **Urutan giliran per AGI** — bukan fixed (pemain → pasukan → musuh).
+- **Formasi depan/belakang** benar-benar menentukan siapa kena.
+- Target selection & info elemen yang lebih jelas.
 
 ### F. Ekonomi & Tekanan (lubang lama)
 - **#2 Kalah tempur ada konsekuensi** (gold/hari/item hilang).

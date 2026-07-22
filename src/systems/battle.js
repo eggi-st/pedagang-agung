@@ -65,6 +65,8 @@ export function startBattle(context, dest){
     skillCooldowns: { heavy:0, warcry:0, transform:0 },
     warcryTurns: 0,
     playerDefending: false,
+    generalSkillUsed: [],   // indeks jendral yang sudah pakai skill (1x/tempur)
+    stoneWall: 0,           // Dinding Batu: kurangi damage musuh giliran ini
     flashTargets: new Set()
   });
   document.getElementById('battle-title').textContent = context==='garrison' ? 'PERTEMPURAN GARNISUN' : (context==='historical' ? '🏛️ HISTORICAL SCENARIO' : (context==='testtown' ? `🏟️ TEST TOWN — GAUNTLET ${dungeonState.floor}/${dungeonState.maxFloor}` : (context==='dungeon' ? `DUNGEON — LANTAI ${dungeonState.floor}/${dungeonState.maxFloor}` : 'PERTEMPURAN')));
@@ -152,6 +154,7 @@ export function enemyTurn(){
     const emult = elementMultiplier(e.elem, defElem);
     let dmg = Math.max(1, Math.round((e.atk - Math.round(target.def*0.6)) * emult));
     if(target.ref==='char' && battle.playerDefending) dmg = Math.max(1, Math.round(dmg*0.5));
+    if(battle.stoneWall) dmg = Math.max(1, Math.round(dmg*0.6)); // Dinding Batu
     target.obj.hp = Math.max(0, target.obj.hp - dmg);
     battle.flashTargets.add(target.ref==='char' ? 'char' : 'gen'+target.idx);
     const name = target.ref==='char' ? 'kamu' : target.m.name;
@@ -162,6 +165,7 @@ export function enemyTurn(){
     }
   });
   battle.playerDefending = false;
+  battle.stoneWall = 0; // efek habis setelah giliran musuh
 }
 
 export function checkBattleEnd(){
@@ -308,6 +312,78 @@ export function battleDefend(){
   if(battle.over) return;
   battle.playerDefending = true;
   blog('Kamu memasang kuda-kuda bertahan, mengurangi damage masuk 50%.');
+  generalsAutoAttack();
+  if(checkBattleEnd()) return;
+  enemyTurn();
+  if(checkBattleEnd()) return;
+  tickPoisonAll();
+  if(checkBattleEnd()) return;
+  tickCooldowns();
+  renderBattle();
+}
+
+// Skill khas per elemen anggota pasukan. Nama untuk tombol; efek di
+// useGeneralSkill. Tiap anggota bisa memakainya 1x per pertempuran.
+export const ELEM_SKILL = {
+  Api: 'Ledakan Api',
+  Air: 'Berkah Air',
+  Angin: 'Badai Angin',
+  Petir: 'Sambaran Petir',
+  Bumi: 'Dinding Batu',
+};
+
+/** Skill anggota pasukan idx berdasarkan elemen efektifnya (1x/tempur). */
+export function useGeneralSkill(idx){
+  if(battle.over) return;
+  const m = state.generals[idx];
+  if(!m || m.hp<=0) return;
+  if(battle.generalSkillUsed.includes(idx)) { sfx('error'); return; }
+  const elem = memberElem(m);
+  if(!ELEM_SKILL[elem]) { sfx('error'); return; }
+  battle.generalSkillUsed.push(idx);
+  const atk = memberAtk(m);
+
+  if(elem==='Api'){
+    aliveEnemies().forEach(t=>{
+      const em = elementMultiplier(elem, t.e.elem);
+      const d = Math.max(1, Math.round(atk*1.1*em));
+      t.e.hp = Math.max(0, t.e.hp - d);
+      battle.flashTargets.add('enemy'+t.i);
+    });
+    blog(`✨ ${m.name} melepas Ledakan Api ke SEMUA musuh!`);
+  } else if(elem==='Petir'){
+    const alive = aliveEnemies();
+    if(alive.length){
+      const t = alive.reduce((a,b)=> a.e.hp>b.e.hp ? a : b);
+      const em = elementMultiplier(elem, t.e.elem);
+      const d = Math.max(1, Math.round(atk*2.2*em));
+      t.e.hp = Math.max(0, t.e.hp - d);
+      battle.flashTargets.add('enemy'+t.i);
+      blog(`✨ ${m.name} menyambar ${t.e.name} dengan Petir sebesar ${d}!`);
+    }
+  } else if(elem==='Angin'){
+    const alive = aliveEnemies();
+    if(alive.length){
+      const t = alive[0];
+      let total = 0;
+      for(let h=0;h<2 && t.e.hp>0;h++){
+        const em = elementMultiplier(elem, t.e.elem);
+        const d = Math.max(1, Math.round(atk*0.9*em));
+        t.e.hp = Math.max(0, t.e.hp - d); total += d;
+        battle.flashTargets.add('enemy'+t.i);
+      }
+      blog(`✨ ${m.name} melancarkan Badai Angin (2x) ke ${t.e.name} sebesar ${total}!`);
+    }
+  } else if(elem==='Air'){
+    const heal = Math.round(atk*1.4);
+    state.char.hp = Math.min(state.char.maxHp, state.char.hp + heal);
+    state.generals.forEach(g=>{ if(g.hp>0) g.hp = Math.min(g.maxHp, g.hp + heal); });
+    blog(`✨ ${m.name} memberi Berkah Air, memulihkan ${heal} HP seluruh pasukan!`);
+  } else if(elem==='Bumi'){
+    battle.stoneWall = 1;
+    blog(`✨ ${m.name} memasang Dinding Batu — damage musuh giliran ini -40%!`);
+  }
+
   generalsAutoAttack();
   if(checkBattleEnd()) return;
   enemyTurn();

@@ -8,7 +8,8 @@ import { state, battle } from '../state.js';
 import { ELEMENT_ICON } from '../data/elements.js';
 import { CLASS_TRANSFORMS } from '../data/classes.js';
 import { spriteCanvasHTML, paintAllSprites } from './sprites.js';
-import { playerElem, aliveEnemies } from '../systems/battle.js';
+import { playerElem, aliveEnemies, ELEM_SKILL } from '../systems/battle.js';
+import { memberElem } from '../systems/generals.js';
 
 export function statusTag(obj){
   return obj.poison && obj.poison.turns>0 ? `<span class="status-tag">☠ Racun ${obj.poison.turns}</span>` : '';
@@ -66,12 +67,23 @@ export function renderBattle(){
   const tcd = battle.skillCooldowns.transform;
   const transform = CLASS_TRANSFORMS[state.className];
   const transformBtn = (state.classTransformed && transform) ? `<button class="gold" onclick="battleSkillTransform()" ${tcd>0?'disabled':''}>${transform.skillName} ${tcd>0?'(CD '+tcd+')':''}</button>` : '';
+  // Skill jendral: satu tombol per anggota hidup ber-elemen, 1x per tempur.
+  const skillBtns = state.generals.map((m,i)=>{
+    if(m.hp<=0) return '';
+    const elem = memberElem(m);
+    const sk = ELEM_SKILL[elem];
+    if(!sk) return '';
+    const used = battle.generalSkillUsed.includes(i);
+    return `<button class="purple" onclick="useGeneralSkill(${i})" ${used?'disabled':''}>${ELEMENT_ICON[elem]||''} ${sk} · ${m.name}${used?' ✓':''}</button>`;
+  }).filter(Boolean).join('');
+  const skillSection = skillBtns ? `<div style="font-size:6.5px;color:var(--dim);margin:2px 0;">Skill Pasukan (1x/tempur)</div>${skillBtns}` : '';
   actionsDiv.innerHTML = `
     <div class="row2">${attackBtns}</div>
     <div class="row2">
       <button class="orange" onclick="battleSkillHeavy()" ${hcd>0?'disabled':''}>Serangan Berat ${hcd>0?'(CD '+hcd+')':''}</button>
       <button class="purple" onclick="battleSkillWarcry()" ${wcd>0?'disabled':''}>Teriakan Perang ${wcd>0?'(CD '+wcd+')':''}</button>
     </div>
+    ${skillSection}
     ${transformBtn}
     <div class="row2">
       <button class="green" onclick="battleUsePotion()">Pakai Ramuan (${state.potions})</button>
