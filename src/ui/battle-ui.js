@@ -8,7 +8,7 @@ import { state, battle } from '../state.js';
 import { ELEMENT_ICON } from '../data/elements.js';
 import { CLASS_TRANSFORMS } from '../data/classes.js';
 import { spriteCanvasHTML, paintAllSprites } from './sprites.js';
-import { playerElem, aliveEnemies, ELEM_SKILL } from '../systems/battle.js';
+import { playerElem, aliveEnemies, ELEM_SKILL, availableCombo } from '../systems/battle.js';
 import { memberElem } from '../systems/generals.js';
 
 export function statusTag(obj){
@@ -76,7 +76,9 @@ export function renderBattle(){
     const used = battle.generalSkillUsed.includes(i);
     return `<button class="purple" onclick="useGeneralSkill(${i})" ${used?'disabled':''}>${ELEMENT_ICON[elem]||''} ${sk} · ${m.name}${used?' ✓':''}</button>`;
   }).filter(Boolean).join('');
-  const skillSection = skillBtns ? `<div style="font-size:6.5px;color:var(--dim);margin:2px 0;">Skill Pasukan (1x/tempur)</div>${skillBtns}` : '';
+  const combo = availableCombo();
+  const comboBtn = combo ? `<button class="gold" onclick="useCombo()">⚡ COMBO ${combo.combo.name} · ${state.generals[combo.iA].name} + ${state.generals[combo.iB].name}</button>` : '';
+  const skillSection = (skillBtns || comboBtn) ? `<div style="font-size:6.5px;color:var(--dim);margin:2px 0;">Skill Pasukan (1x/tempur)</div>${comboBtn}${skillBtns}` : '';
   actionsDiv.innerHTML = `
     <div class="row2">${attackBtns}</div>
     <div class="row2">

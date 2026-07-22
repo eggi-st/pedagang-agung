@@ -332,6 +332,62 @@ export const ELEM_SKILL = {
   Bumi: 'Dinding Batu',
 };
 
+// Combo dua anggota: pasangan elemen tertentu memicu serangan gabungan kuat,
+// memakai jatah skill KEDUA anggota. Order elemen tidak penting.
+export const COMBOS = [
+  { a: 'Api',   b: 'Angin', name: 'Badai Api',      dmg: 1.0 },
+  { a: 'Petir', b: 'Air',   name: 'Prahara Petir',  dmg: 1.0 },
+  { a: 'Bumi',  b: 'Api',   name: 'Letusan Gunung', dmg: 1.2 },
+  { a: 'Air',   b: 'Angin', name: 'Topan',          dmg: 0.6, heal: 0.5 },
+  { a: 'Petir', b: 'Bumi',  name: 'Gempa Petir',    dmg: 1.0 },
+];
+
+/** Cari satu combo yang bisa dipakai sekarang: dua anggota hidup, skill
+ *  belum dipakai, elemennya cocok sepasang. Null kalau tak ada. */
+export function availableCombo(){
+  if(!battle || battle.over) return null;
+  const cand = state.generals.map((m,i)=>({m,i})).filter(x=>x.m.hp>0 && !battle.generalSkillUsed.includes(x.i));
+  for(let a=0;a<cand.length;a++){
+    for(let b=a+1;b<cand.length;b++){
+      const eA = memberElem(cand[a].m), eB = memberElem(cand[b].m);
+      const combo = COMBOS.find(c=> (c.a===eA&&c.b===eB)||(c.a===eB&&c.b===eA));
+      if(combo) return { combo, iA: cand[a].i, iB: cand[b].i };
+    }
+  }
+  return null;
+}
+
+/** Jalankan combo yang tersedia (memakai skill kedua anggotanya). */
+export function useCombo(){
+  if(battle.over) return;
+  const found = availableCombo();
+  if(!found){ sfx('error'); return; }
+  const { combo, iA, iB } = found;
+  battle.generalSkillUsed.push(iA, iB);
+  const atk = memberAtk(state.generals[iA]) + memberAtk(state.generals[iB]);
+  aliveEnemies().forEach(t=>{
+    const d = Math.max(1, Math.round(atk*combo.dmg));
+    t.e.hp = Math.max(0, t.e.hp - d);
+    battle.flashTargets.add('enemy'+t.i);
+  });
+  if(combo.heal){
+    const h = Math.round(atk*combo.heal);
+    state.char.hp = Math.min(state.char.maxHp, state.char.hp + h);
+    state.generals.forEach(g=>{ if(g.hp>0) g.hp = Math.min(g.maxHp, g.hp + h); });
+  }
+  blog(`✨✨ COMBO ${combo.name}! ${state.generals[iA].name} + ${state.generals[iB].name} bersinergi!`);
+  sfx('win'); haptic([40,20,60]);
+
+  generalsAutoAttack();
+  if(checkBattleEnd()) return;
+  enemyTurn();
+  if(checkBattleEnd()) return;
+  tickPoisonAll();
+  if(checkBattleEnd()) return;
+  tickCooldowns();
+  renderBattle();
+}
+
 /** Skill anggota pasukan idx berdasarkan elemen efektifnya (1x/tempur). */
 export function useGeneralSkill(idx){
   if(battle.over) return;

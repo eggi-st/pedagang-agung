@@ -93,7 +93,10 @@ dari pemain menang.
 - ✅ **Skill jendral aktif** — tiap anggota (jendral & monster) punya skill khas
   ELEMEN-nya (Api=AOE, Petir=nuke tunggal, Angin=2x hit, Air=heal pasukan,
   Bumi=Dinding Batu -40% damage), dipicu pemain, 1x per tempur. (selesai)
-- **Combo antar-jendral** — sinergi/serangan gabungan saat kombinasi tertentu.
+- ✅ **Combo antar-jendral** — pasangan elemen tertentu (Api+Angin=Badai Api,
+  Petir+Air=Prahara Petir, Bumi+Api=Letusan Gunung, Air+Angin=Topan+heal,
+  Petir+Bumi=Gempa Petir) memicu serangan gabungan AOE, memakai jatah skill
+  KEDUA anggota. Tombol muncul saat pasangan tersedia. (selesai)
 - **Urutan giliran per AGI** — bukan fixed (pemain → pasukan → musuh).
 - **Formasi depan/belakang** benar-benar menentukan siapa kena.
 - Target selection & info elemen yang lebih jelas.
