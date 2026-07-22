@@ -1,0 +1,103 @@
+# Backlog Pengembangan — Pedagang Agung (arah Xian: pembangunan pasukan)
+
+## Reframe Identitas (penting)
+Xian (거상) BUKAN 100% dagang — inti sebenarnya **membangun pasukan besar**,
+dengan dagang sebagai mesin ekonomi yang mendanainya. Ini menggeser arah:
+lean lebih dalam ke progression pasukan/karakter & pertempuran, dengan dagang
+sebagai fondasi (yang sudah dibuat bereaksi).
+
+## Apa yang Terverifikasi dari Riset vs dari Ingatan Pemain
+Riset mendalam ke sumber Korea MENGONFIRMASI: credit level (progresi ekonomi
+terpisah dari level tempur), sistem 5 elemen, promosi ber-gate, formasi
+craftable, skill nego. Riset TIDAK bisa mengonfirmasi (bahkan cenderung
+menyangkal) roster per-negara, dan TIDAK punya data soal: rasa lapar/makan,
+skill & combo jendral, barak, inventory pusat.
+
+**Kesimpulan jujur:** untuk hal-hal itu, INGATAN PEMAIN lebih andal daripada
+riset AI. Fitur di bawah yang bertanda (ingatan) dibangun dari deskripsi pemain,
+bukan klaim terverifikasi — kalau ada detail Xian yang perlu diluruskan, koreksi
+dari pemain menang.
+
+---
+
+## SUDAH SELESAI
+- Harga pasar bereaksi (jual menekan, beli menaikkan, pulih harian).
+- Nama pemain; disiplin warna (4 peran); penginapan (heal luar tempur).
+- Equip karakter multi-slot (kepala/badan/celana/sepatu + senjata + 2 aksesori).
+- Pasukan monster (tangkap monster kalah jadi prajurit).
+- Persenjatai pasukan (senjata cadangan → ATK + ganti elemen).
+
+---
+
+## BACKLOG
+
+### A. Progression & Survival
+- **Level per anggota** — jendral & monster dapat EXP dan naik level sendiri
+  (bukan cuma promosi berbayar). Karakter utama sudah naik level.
+- **Rasa lapar & makan** (ingatan) — karakter utama lapar seiring hari; harus
+  makan (item makanan / beli di kota). Kalau kelaparan: penalti stat/HP. Ini
+  sekaligus mengisi lubang "tekanan/konsekuensi".
+
+### B. Konten per-Negara (ingatan)
+- **Jendral khas per negara** — Joseon/China/Jepang (+ mungky Taiwan/India/
+  Mongolia) punya roster jendral sendiri.
+- **Monster khas per negara** — tiap wilayah punya monster sendiri untuk
+  dilawan & ditangkap.
+- **Kota monster legendaris per negara** — lokasi khusus memunculkan monster
+  legendaris sesuai negara (mirip 신수/흉수 yang ter-gate di Xian).
+
+### C. Kedalaman Jendral
+- **Equip utama per jendral** (ingatan) — tiap jendral punya senjata/pusaka
+  khasnya (signature), bukan cuma senjata cadangan generik.
+- **Skill per jendral** (ingatan) — tiap jendral punya skill unik (bukan cuma
+  auto-attack).
+- **Combo 2 jendral** (ingatan) — sinergi/serangan gabungan saat dua jendral
+  tertentu ada di satu pertempuran.
+
+### D. Penyimpanan
+- **Barak** (ingatan) — simpan jendral di luar party aktif (party dibatasi 6);
+  tukar-pasang di kota.
+- **Inventory pusat** (ingatan) — gudang item yang bisa diakses di kota mana
+  pun (seperti bank), memisahkan tas bawaan dari simpanan.
+
+### E. Sistem Tempur v2
+- Urutan giliran berdasarkan AGI (kecepatan), bukan fixed.
+- Formasi depan/belakang benar-benar menentukan siapa kena (garda depan
+  melindungi belakang).
+- Skill jendral aktif (pemain memicu), memanfaatkan C.
+- Combo antar-jendral (C) & kedalaman elemen (asimetri).
+- Target selection & info elemen yang jelas.
+
+### F. Ekonomi & Tekanan (lubang lama)
+- **#2 Kalah tempur ada konsekuensi** (gold/hari/item hilang).
+- **#3 Tempur jatuhkan loot, bukan gold gratis** + skill nego jual loot.
+
+### G. Visual
+- Fase 1 (warna) ✅; Fase 3 (ikon piksel ganti emoji + jenis monster) berikutnya.
+- Peta visual, modal berbingkai, identitas kota, animasi tempur tersambung.
+- OPSI gambar eksternal (via ChatGPT/DALL·E) — lihat catatan di bawah.
+
+---
+
+## Rekomendasi Urutan
+1. Pilih fondasi identitas: **konten per-negara** (B) + **level per anggota** (A)
+   — ini menegakkan reframe "pembangunan pasukan".
+2. **Barak + inventory pusat** (D) — infrastruktur yang dibutuhkan begitu pasukan
+   & item makin banyak.
+3. **Kedalaman jendral** (C: skill + combo + equip utama) menyatu dengan
+   **tempur v2** (E) — ini paket "pertempuran jauh lebih menarik".
+4. Selipkan **rasa lapar** (A) & **lubang #2/#3** (F) sebagai tekanan.
+5. **Visual/sprites** (G) jalan paralel.
+
+## Soal Gambar via ChatGPT / DALL·E
+Trade-off jujur:
+- Pixel-art prosedural sekarang: nol aset, bundle mungil, pewarnaan dinamis
+  per elemen GRATIS, offline. Kelemahan: detail terbatas.
+- Gambar AI eksternal: detail lebih tinggi, TAPI mematikan pewarnaan dinamis
+  (1 monster×5 elemen jadi banyak file), menambah bobot, dan RISIKO tak
+  konsisten gaya (tiap generate beda). Pixel-art dari DALL·E sering tidak
+  benar-benar pixel-perfect.
+- **Rekomendasi:** pertahankan sprite gameplay prosedural; pakai gambar
+  eksternal HANYA untuk yang prosedural lemah — LATAR KOTA, ART LAYAR JUDUL,
+  potret jendral legendaris. AI bisa menuliskan prompt spesifik + konsisten
+  (palet, ukuran, gaya) untuk pemain generate di ChatGPT, lalu dimasukkan.
