@@ -255,6 +255,13 @@ button.choice{
 .merc-rank{ color:var(--blue); font-size:var(--fs-micro); }
 .merc-formation-row{ display:flex; gap:4px; margin-top:6px; }
 .merc-formation-row button{ margin:0; }
+.merc-weapon-row{ display:flex; align-items:center; gap:6px; margin-top:6px; }
+.merc-weapon-row > span{ color:var(--dim); font-size:var(--fs-micro); white-space:nowrap; }
+.merc-weapon-row select{
+  flex:1; min-width:0; font-family: inherit; font-size:var(--fs-micro);
+  color: var(--text); background: var(--panel-light);
+  border: 2px solid #000; border-radius:3px; padding:6px 4px; min-height:34px;
+}
 
 /* ============================================================
    PERTEMPURAN

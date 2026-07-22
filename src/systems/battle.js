@@ -14,6 +14,7 @@ import { rollDrop, genItem } from './generators.js';
 import { MONSTERS, DUNGEON_MONSTERS } from '../data/monsters.js';
 import { MONSTER_SPRITE } from '../data/sprites.js';
 import { MAX_GENERALS } from '../data/mercenaries/index.js';
+import { memberAtk, memberElem } from './generals.js';
 import { ELEMENTS, elementMultiplier } from '../data/elements.js';
 import { WEAPONS } from '../data/economy.js';
 import { CLASS_TRANSFORMS, CLASS_TRANSFORM_LEVEL } from '../data/classes.js';
@@ -121,8 +122,8 @@ export function generalsAutoAttack(){
     if(alive.length===0) return;
     const target = alive.reduce((a,b)=> a.e.hp<b.e.hp ? a : b);
     const buffMult = battle.warcryTurns>0 ? 1.3 : 1;
-    const emult = elementMultiplier(m.elem, target.e.elem);
-    const mdmg = Math.max(1, Math.round((m.atk + rand(-2,2)) * buffMult * emult));
+    const emult = elementMultiplier(memberElem(m), target.e.elem);
+    const mdmg = Math.max(1, Math.round((memberAtk(m) + rand(-2,2)) * buffMult * emult));
     target.e.hp = Math.max(0, target.e.hp - mdmg);
     battle.flashTargets.add('enemy'+target.i);
     blog(`${m.name} menyerang ${target.e.name} sebesar ${mdmg} damage.${battle.warcryTurns>0?' (buff!)':''}${elemNote(emult)}`);

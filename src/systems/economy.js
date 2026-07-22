@@ -17,6 +17,7 @@ import { addLog, gainGold, reputationBonusPct } from './character.js';
 import { genRecruits } from './generators.js';
 import { GOODS, WEAPONS, ARMORS, FACTORY_RECIPES, ELITE_EXCHANGES } from '../data/economy.js';
 import { CITIES } from '../data/world.js';
+import { releaseWeaponFromMembers } from './generals.js';
 import { sfx } from '../audio/sfx.js';
 
 // Parameter pasar. Semua relatif terhadap baseline kota, bukan angka mutlak.
@@ -105,6 +106,8 @@ export function buyGear(slot, id) {
 export function equipGear(slot, id) {
   const ownedArr = slot === 'weapon' ? state.ownedWeapons : state.ownedArmors;
   if (!ownedArr.includes(id)) return;
+  // Kalau senjata ini sedang dipegang anggota pasukan, lepaskan dulu.
+  if (slot === 'weapon') releaseWeaponFromMembers(id);
   state.equipment[slot] = id;
   render();
 }
@@ -114,6 +117,7 @@ export function sellGear(slot, id) {
   const ownedArr = slot === 'weapon' ? state.ownedWeapons : state.ownedArmors;
   const idx = ownedArr.indexOf(id);
   if (idx < 0 || state.equipment[slot] === id) return;
+  if (slot === 'weapon') releaseWeaponFromMembers(id); // jangan tersisa di pasukan
   const item = list.find((x) => x.id === id);
   gainGold(Math.round(item.price * 0.5));
   ownedArr.splice(idx, 1);

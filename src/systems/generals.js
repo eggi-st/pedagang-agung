@@ -5,7 +5,57 @@ import { state } from '../state.js';
 import { render } from '../core/bus.js';
 import { addLog } from './character.js';
 import { RANK_NAMES, MAX_GENERALS } from '../data/mercenaries/index.js';
+import { WEAPONS } from '../data/economy.js';
 import { sfx } from '../audio/sfx.js';
+
+// ---------- SENJATA PASUKAN ----------
+// Tiap anggota pasukan (jendral & monster) bisa dipasangi senjata cadangan.
+// Senjata menambah ATK dan MENGGANTI elemen anggota (untuk strategi counter).
+
+/** Objek senjata yang terpasang pada anggota, atau null. */
+export function memberWeapon(m) {
+  return m && m.weapon ? WEAPONS.find((w) => w.id === m.weapon) || null : null;
+}
+/** ATK efektif = ATK dasar + ATK senjata terpasang. */
+export function memberAtk(m) {
+  const w = memberWeapon(m);
+  return m.atk + (w ? w.atk : 0);
+}
+/** Elemen efektif = elemen senjata bila terpasang, jika tidak elemen bawaan. */
+export function memberElem(m) {
+  const w = memberWeapon(m);
+  return w ? w.elem : m.elem;
+}
+
+/** Senjata yang boleh dipasang ke anggota idx: dimiliki, bukan senjata pemain,
+ *  bukan dipakai anggota lain. (Senjata anggota ini sendiri tetap disertakan.) */
+export function availableWeaponsFor(idx) {
+  return state.ownedWeapons.filter((id) => {
+    if (id === state.equipment.weapon) return false;
+    const usedByOther = state.generals.some((o, i) => i !== idx && o.weapon === id);
+    return !usedByOther;
+  });
+}
+
+export function equipGeneralWeapon(idx, weaponId) {
+  const g = state.generals[idx];
+  if (!g) return;
+  if (!weaponId) { g.weapon = null; render(); return; } // lepas senjata
+  if (!state.ownedWeapons.includes(weaponId)) return;
+  if (state.equipment.weapon === weaponId) return;
+  if (state.generals.some((o, i) => i !== idx && o.weapon === weaponId)) return;
+  g.weapon = weaponId;
+  sfx('buy');
+  const w = WEAPONS.find((x) => x.id === weaponId);
+  addLog(`${g.name} dipersenjatai ${w.name} (elemen ${w.elem}).`);
+  render();
+}
+
+/** Lepaskan sebuah senjata dari semua anggota (dipanggil saat pemain memakai
+ *  atau menjual senjata itu, agar tak terpasang di dua tempat). */
+export function releaseWeaponFromMembers(id) {
+  state.generals.forEach((g) => { if (g.weapon === id) g.weapon = null; });
+}
 
 export function recruitGeneral(idx){
   const m = state.recruits[state.city][idx];

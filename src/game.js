@@ -27,7 +27,7 @@ import { buy, sell, buyGear, equipGear, sellGear, buyPotion, restAtInn, startPro
 import { startBattle, closeBattle, battleAttack, battleSkillHeavy, battleSkillWarcry, battleSkillTransform, battleUsePotion, battleDefend, battleFlee } from './systems/battle.js';
 import { renderBattle } from './ui/battle-ui.js';
 import { toggleCraftSelect, craftItems, craftDiagram, equipAccessory, sellItem } from './systems/inventory.js';
-import { recruitGeneral, moveGeneral, useRebirthStone, promoteGeneral } from './systems/generals.js';
+import { recruitGeneral, moveGeneral, useRebirthStone, promoteGeneral, equipGeneralWeapon } from './systems/generals.js';
 import { upgradeGudang, upgradeBenteng, enterDungeon, attackGarrison, enterTestTown } from './systems/territory.js';
 import { claimQuest, claimGuildQuest } from './systems/quests.js';
 import { render, switchTab } from './ui/render.js';
@@ -238,6 +238,7 @@ Object.assign(window, {
   manualSave,
   moveGeneral,
   promoteGeneral,
+  equipGeneralWeapon,
   recruitGeneral,
   sell,
   sellGear,

@@ -107,8 +107,10 @@ Fitur yang diminta, dipetakan ke mekanik Xian. Dikerjakan bertahap.
   pasukan (travel/dungeon/testtown non-bos, LUK menaikkan peluang); ikut bertempur
   dengan sprite monster, bisa formasi & heal. (selesai)
   Lanjutan: item "batu segel" untuk agency penangkapan; monster khas per region.
-- **Equip pasukan (jendral)** — beri jendral senjata/aksesori sendiri (bukan cuma
-  karakter utama). Butuh: slot equip per jendral, efek stat, UI di kartu jendral.
+- ✅ **Persenjatai pasukan** — tiap anggota (jendral & monster) bisa dipasangi
+  senjata cadangan: menambah ATK dan MENGGANTI elemen (strategi counter). Senjata
+  dilepas otomatis saat dipakai/dijual pemain. (selesai)
+  Lanjutan: slot armor/aksesori per anggota juga.
 - **Slot tambahan (dan lainnya)** — sarung tangan, jubah/cape, cincin; efek stat
   khusus per slot (mis. sepatu → AGI).
 - **Jendral lebih dalam** — elemen & formasi lebih jelas (garda depan/belakang

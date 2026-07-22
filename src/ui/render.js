@@ -8,7 +8,7 @@
 import { state } from '../state.js';
 import { getAtk, getDef, currentWeaponAtk, currentArmorDef, reputationBonusPct } from '../systems/character.js';
 import { craftSelection } from '../systems/inventory.js';
-import { promoteCost } from '../systems/generals.js';
+import { promoteCost, memberAtk, memberElem, memberWeapon, availableWeaponsFor } from '../systems/generals.js';
 import { testTownAvailable } from '../systems/territory.js';
 import { guildQuestReady, guildQuestProgressNow, guildQuestLabel } from '../systems/generators.js';
 import { travel, priceTrend, restCost } from '../systems/economy.js';
@@ -243,10 +243,18 @@ export function render(){
     const pct = Math.max(0,Math.round(m.hp/m.maxHp*100));
     const cost = promoteCost(m);
     const canPromote = m.rank < RANK_NAMES.length-1;
+    const eatk = memberAtk(m);
+    const eelem = memberElem(m);
+    const armed = memberWeapon(m);
+    // Pilihan senjata: kosong + senjata yang tersedia untuk anggota ini.
+    const wpnOptions = ['<option value="">Tanpa senjata</option>'].concat(
+      availableWeaponsFor(idx).map(id=>{ const w=WEAPONS.find(x=>x.id===id); return `<option value="${id}" ${m.weapon===id?'selected':''}>${w.name} +${w.atk} ${w.elem}</option>`; })
+    ).join('');
     div.innerHTML = `
-      <div class="merc-head row-icon"><div class="icon-box">${m.kind==='monster' ? spriteCanvasHTML('monster', m.elem||'Bumi', 28, m.monsterName) : spriteCanvasHTML('general', m.rank, 28)}</div><b style="flex:1;">${m.name}${idx===0?' (Garda Depan)':''}</b><span class="merc-rank">${m.kind==='monster' ? '🐾 Peliharaan' : RANK_NAMES[m.rank]} ${ELEMENT_ICON[m.elem]||''}</span></div>
-      <div style="font-size:7px; color:var(--dim);">ATK ${m.atk} · HP ${m.hp}/${m.maxHp}</div>
+      <div class="merc-head row-icon"><div class="icon-box">${m.kind==='monster' ? spriteCanvasHTML('monster', eelem||'Bumi', 28, m.monsterName) : spriteCanvasHTML('general', m.rank, 28)}</div><b style="flex:1;">${m.name}${idx===0?' (Garda Depan)':''}</b><span class="merc-rank">${m.kind==='monster' ? '🐾 Peliharaan' : RANK_NAMES[m.rank]} ${ELEMENT_ICON[eelem]||''}</span></div>
+      <div style="font-size:7px; color:var(--dim);">ATK ${eatk}${armed?` <span style="color:var(--gold);">(⚔ ${armed.name})</span>`:''} · HP ${m.hp}/${m.maxHp}</div>
       <div class="merc-hpbar"><div style="width:${pct}%; background:${hpBarColor(pct)};"></div></div>
+      <div class="merc-weapon-row"><span>⚔ Senjata</span><select onchange="equipGeneralWeapon(${idx}, this.value)">${wpnOptions}</select></div>
       <div class="merc-formation-row">
         <button class="mini-btn" style="flex:1;" onclick="moveGeneral(${idx},-1)" ${idx===0?'disabled':''}>▲ Maju</button>
         <button class="mini-btn" style="flex:1;" onclick="moveGeneral(${idx},1)" ${idx===state.generals.length-1?'disabled':''}>▼ Mundur</button>
