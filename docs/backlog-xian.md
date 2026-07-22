@@ -42,6 +42,15 @@ dari pemain menang.
 - **Slot pabrik lebih dari satu per kota / upgrade kapasitas** — perluasan
   produksi.
 
+### Waktu & Kalender
+- ✅ **Kalender + musim** — day ditampilkan sebagai Tahun/Bulan/Hari; 4 musim
+  (Semi/Panas/Gugur/Dingin) memodulasi harga (barang tertentu murah/mahal per
+  musim, ±20-25% ke baseline). Berbasis giliran, TANPA jam real-time (keputusan
+  sadar: decay real-time menghukum pemain hobi offline & bentrok ekonomi
+  giliran). (selesai)
+  Analisa lengkap: Xian pakai jam real-time (1 hari-game ~48 mnt nyata) karena
+  MMO persisten; tidak cocok ditiru untuk single-player offline.
+
 ### A. Progression & Survival
 - **Level per anggota** — jendral & monster dapat EXP dan naik level sendiri
   (bukan cuma promosi berbayar). Karakter utama sudah naik level.

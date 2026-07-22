@@ -17,6 +17,7 @@ import { addLog, gainGold, reputationBonusPct } from './character.js';
 import { genRecruits } from './generators.js';
 import { GOODS, WEAPONS, ARMORS, FACTORY_RECIPES, FACTORY_PRICE, ELITE_EXCHANGES } from '../data/economy.js';
 import { CITIES } from '../data/world.js';
+import { seasonalFactor } from '../data/calendar.js';
 import { releaseWeaponFromMembers } from './generals.js';
 import { sfx } from '../audio/sfx.js';
 
@@ -239,7 +240,9 @@ export function travel(dest) {
     const cityPrices = state.prices[city];
     GOODS.forEach((g) => {
       const cur = cityPrices[g.id];
-      const target = baseline(city, g.id);
+      // Target = baseline kota × pengali musim. Prices bergeser halus ke level
+      // musiman: musim panen menurunkan, musim dingin menaikkan barang tertentu.
+      const target = baseline(city, g.id) * seasonalFactor(g.id, state.day);
       let next = cur + (target - cur) * RECOVERY;
       next *= 1 + rand(-NOISE, NOISE) / 100;
       cityPrices[g.id] = Math.max(3, next); // pecahan; dibulatkan hanya saat ditampilkan

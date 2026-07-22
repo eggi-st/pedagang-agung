@@ -12,6 +12,7 @@ import { promoteCost, memberAtk, memberElem, memberWeapon, availableWeaponsFor }
 import { testTownAvailable } from '../systems/territory.js';
 import { guildQuestReady, guildQuestProgressNow, guildQuestLabel } from '../systems/generators.js';
 import { travel, priceTrend, restCost } from '../systems/economy.js';
+import { calendarFromDay } from '../data/calendar.js';
 import { checkAchievements } from '../systems/progression.js';
 import { saveGame } from '../systems/save.js';
 import { hpBarColor } from './battle-ui.js';
@@ -82,7 +83,15 @@ export function render(){
   const repPct = reputationBonusPct(state.city);
   const discPct = Math.min(30, (state.classDiscountPct||0) + repPct);
   const list = document.getElementById('goods-list');
-  list.innerHTML = `<div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Reputasi di ${state.city}: ${state.reputation[state.city]||0} (diskon beli ${discPct}%, bonus jual ${repPct}%)</div>`;
+  // Banner musim + tanggal: menjelaskan pergeseran harga musiman.
+  const cal = calendarFromDay(state.day);
+  const s = cal.season;
+  const nm = ids => ids.map(id=>(GOODS.find(g=>g.id===id)||{}).name).filter(Boolean).join(', ');
+  const cheapTxt = s.cheap.length ? ` · <span style="color:var(--green);">${nm(s.cheap)} murah</span>` : '';
+  const dearTxt = s.dear.length ? ` · <span style="color:var(--red);">${nm(s.dear)} mahal</span>` : '';
+  list.innerHTML =
+    `<div style="font-size:7px; color:var(--gold); margin-bottom:4px;">${s.icon} Musim ${s.name} — Tahun ${cal.year}, Bulan ${cal.month}, Hari ${cal.dayOfMonth}${cheapTxt}${dearTxt}</div>` +
+    `<div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Reputasi di ${state.city}: ${state.reputation[state.city]||0} (diskon beli ${discPct}%, bonus jual ${repPct}%)</div>`;
   const prices = state.prices[state.city];
   GOODS.forEach(g=>{
     const basePrice = prices[g.id];
