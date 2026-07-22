@@ -16,7 +16,7 @@ import { showEvent } from '../ui/overlay.js';
 import { addLog, gainGold, reputationBonusPct } from './character.js';
 import { genRecruits } from './generators.js';
 import { GOODS, WEAPONS, ARMORS, FACTORY_RECIPES, FACTORY_PRICE, ELITE_EXCHANGES } from '../data/economy.js';
-import { CITIES } from '../data/world.js';
+import { CITIES, CITY_NATION, NATION_LABEL } from '../data/world.js';
 import { seasonalFactor } from '../data/calendar.js';
 import { releaseWeaponFromMembers } from './generals.js';
 import { sfx } from '../audio/sfx.js';
@@ -33,6 +33,10 @@ const RECOVERY = 0.15;     // tiap hari: 15% jarak ke baseline ditutup
 const NOISE = 3;           // ±3% derau harian
 const FLOOR_MULT = 0.5;    // harga tak jatuh di bawah 50% baseline
 const CAP_MULT = 1.6;      // harga tak naik di atas 160% baseline
+
+// Perjalanan laut antar-negara: lebih lama & berongkos daripada darat.
+const SHIP_DAYS = 2;
+const SHIP_FARE = 50;
 
 /** Harga "wajar" sebuah barang di sebuah kota. Aman untuk save lama. */
 function baseline(city, id) {
@@ -222,8 +226,31 @@ export function enterHistoricalScenario() {
 
 // ---------- PERJALANAN ----------
 
+/** Info perjalanan ke sebuah kota dari kota saat ini: darat vs kapal. */
+export function travelInfo(dest) {
+  const ship = CITY_NATION[dest] !== CITY_NATION[state.city];
+  return { ship, days: ship ? SHIP_DAYS : 1, fare: ship ? SHIP_FARE : 0 };
+}
+
+// Pemulihan harga SATU hari: tiap kota ditarik pelan ke baseline × musim + derau.
+function agePricesOneDay() {
+  CITIES.forEach((city) => {
+    const cityPrices = state.prices[city];
+    GOODS.forEach((g) => {
+      const cur = cityPrices[g.id];
+      const target = baseline(city, g.id) * seasonalFactor(g.id, state.day);
+      let next = cur + (target - cur) * RECOVERY;
+      next *= 1 + rand(-NOISE, NOISE) / 100;
+      cityPrices[g.id] = Math.max(3, next);
+    });
+  });
+}
+
 export function travel(dest) {
-  state.day++;
+  const { ship, days, fare } = travelInfo(dest);
+  if (state.gold < fare) { sfx('error'); return; } // tak mampu ongkos kapal
+  if (fare) { state.gold -= fare; }
+  state.day += days;
   state.city = dest;
   if (!state.goldHistory) state.goldHistory = [];
   state.goldHistory.push({ day: state.day, gold: state.gold });
@@ -232,22 +259,11 @@ export function travel(dest) {
   const prices = state.prices[dest];
   let eventMsg = null;
 
-  // Pemulihan harian: harga tiap kota ditarik pelan kembali ke baseline-nya
-  // plus sedikit derau. Inilah yang membuat rute untung tidak bisa di-spam —
-  // harga yang kamu tekan dengan menjual perlahan pulih, dan pasar kota yang
-  // tidak kamu datangi pun ikut bergerak sendiri.
-  CITIES.forEach((city) => {
-    const cityPrices = state.prices[city];
-    GOODS.forEach((g) => {
-      const cur = cityPrices[g.id];
-      // Target = baseline kota × pengali musim. Prices bergeser halus ke level
-      // musiman: musim panen menurunkan, musim dingin menaikkan barang tertentu.
-      const target = baseline(city, g.id) * seasonalFactor(g.id, state.day);
-      let next = cur + (target - cur) * RECOVERY;
-      next *= 1 + rand(-NOISE, NOISE) / 100;
-      cityPrices[g.id] = Math.max(3, next); // pecahan; dibulatkan hanya saat ditampilkan
-    });
-  });
+  if (ship) addLog(`⛵ Berlayar ke ${dest} (${NATION_LABEL[CITY_NATION[dest]]}) — ${days} hari, ongkos ${fare}g.`);
+
+  // Pemulihan harga berjalan per hari yang dilewati (kapal = beberapa hari),
+  // jadi rute yang ditekan tetap pulih sesuai lama perjalanan.
+  for (let d = 0; d < days; d++) agePricesOneDay();
 
   // Kejutan pasar sesekali di kota tujuan: kelangkaan melonjak, panen anjlok.
   // Deviasi ini lalu ikut pulih ke baseline pada hari-hari berikutnya.

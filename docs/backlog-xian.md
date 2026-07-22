@@ -36,9 +36,11 @@ dari pemain menang.
   DIBELI (300g) dulu; isi kebutuhan → produksi jalan otomatis seiring hari
   (biaya produksi) → hasil dijual ke pasar. Banyak pabrik bisa jalan paralel.
   (selesai)
-- **Kapal antar-negara** (ingatan) — pindah pulau/negara naik kapal (biaya +
-  waktu lebih), berbeda dari perjalanan darat antar-kota. Butuh: geografi
-  dikelompokkan per negara/pulau, biaya & durasi kapal, UI peta.
+- ✅ **Kapal antar-negara + geografi per-negara** — tiap kota punya negara
+  (CITY_NATION); perjalanan dalam negara = darat (1 hari, gratis), antar negara
+  = kapal (2 hari + ongkos 50g). Daftar tujuan & peta menampilkan mode & negara.
+  Pemulihan harga berjalan per hari yang dilewati. (selesai)
+  Lanjutan: ongkos/durasi kapal per jarak; lebih banyak kota per negara.
 - **Slot pabrik lebih dari satu per kota / upgrade kapasitas** — perluasan
   produksi.
 

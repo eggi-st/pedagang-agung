@@ -11,8 +11,9 @@ import { craftSelection } from '../systems/inventory.js';
 import { promoteCost, memberAtk, memberElem, memberWeapon, availableWeaponsFor } from '../systems/generals.js';
 import { testTownAvailable } from '../systems/territory.js';
 import { guildQuestReady, guildQuestProgressNow, guildQuestLabel } from '../systems/generators.js';
-import { travel, priceTrend, restCost } from '../systems/economy.js';
+import { travel, travelInfo, priceTrend, restCost } from '../systems/economy.js';
 import { calendarFromDay } from '../data/calendar.js';
+import { CITY_NATION, NATION_LABEL } from '../data/world.js';
 import { checkAchievements } from '../systems/progression.js';
 import { saveGame } from '../systems/save.js';
 import { hpBarColor } from './battle-ui.js';
@@ -281,9 +282,12 @@ export function render(){
   const destList = document.getElementById('dest-list');
   destList.innerHTML='';
   CITIES.filter(c=>c!==state.city).forEach(c=>{
+    const info = travelInfo(c);
     const btn = document.createElement('button');
     btn.className='dest-btn';
-    btn.innerHTML = `${c} <small>1 hari perjalanan · Lv rekomendasi ${CITY_LEVEL_RANGE[c]}</small>`;
+    const mode = info.ship ? `⛵ Kapal ke ${NATION_LABEL[CITY_NATION[c]]} · ${info.days} hari · ongkos ${info.fare}g` : `🚶 Darat · 1 hari`;
+    btn.innerHTML = `${c} <small>${mode} · Lv ${CITY_LEVEL_RANGE[c]}</small>`;
+    if(info.ship && state.gold < info.fare) btn.disabled = true;
     btn.onclick = ()=> travel(c);
     destList.appendChild(btn);
   });
@@ -418,7 +422,7 @@ export function renderPeta(){
         ${isOwned?'<span class="tag owned">Milikmu</span>':'<span class="tag neutral">Netral</span>'}
         ${isHere?'<span class="tag here">Di sini</span>':''}
       </span></div>
-      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Rekomendasi Level: ${CITY_LEVEL_RANGE[c]}</div>
+      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">${NATION_LABEL[CITY_NATION[c]]} · Rekomendasi Level: ${CITY_LEVEL_RANGE[c]}</div>
       ${actions}
     `;
     petaList.appendChild(div);

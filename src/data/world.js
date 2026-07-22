@@ -17,5 +17,18 @@ export const CITY_ICON = {
   Chennai: '🕌',
 };
 
-// TODO (Fase migrasi lanjutan): pecah CITIES jadi per-region/negara,
-// tambah hunting spot terpisah dari dungeon, dan rute laut antar region.
+// Negara/pulau tiap kota. Perjalanan dalam negara sama = darat (1 hari,
+// gratis); antar negara = kapal (lebih lama + ongkos). Beijing & Taipei
+// satu daratan (Ming), jadi bisa lewat darat.
+export const CITY_NATION = {
+  Hanseong: 'Joseon',
+  Beijing: 'Ming',
+  Taipei: 'Ming',
+  Kyoto: 'Jepang',
+  Chennai: 'India',
+};
+
+// Nama tampilan negara (untuk header/peta).
+export const NATION_LABEL = {
+  Joseon: 'Joseon', Ming: 'Ming (China)', Jepang: 'Jepang', India: 'India',
+};
