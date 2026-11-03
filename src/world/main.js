@@ -17,16 +17,18 @@ import { createNpc, openDialogue, advanceDialogue, closeDialogue } from './npc.j
 import { createInventory, addItem, removeItem, countItem, listItems, totalCount } from './inventory.js';
 import { getItemDef, rarityColor, RARITY } from './data/items.js';
 import { MENU_TABS, getTab, renderMenuTab } from './menu.js';
-import { COMPANIONS } from './data/companions.js';
-import { newProgress, recalcStats, gainXp, allocateStat, POINTS_PER_LEVEL, MANA_REGEN } from './level.js';
+import { COMPANIONS, getCompanionDef } from './data/companions.js';
+import { newProgress, recalcStats, gainXp, allocateStat, POINTS_PER_LEVEL, MANA_REGEN, MAX_LEVEL } from './level.js';
 import { playerAttack, skillStrike, damagePlayer, updateFloaters, spendMana } from './combat.js';
 import { dashPlayer, SKILL1_CD, SKILL1_COST, SKILL2_CD, DASH_COST } from './player.js';
+import { createParty, hireMember, dismissMember, gainPartyXp, memberMaxHp, MAX_MEMBERS } from './party.js';
+import { getShopStock } from './data/shop.js';
+import { writeSave, readSave, clearSave, migrateLegacy } from './save.js';
 import { loadImage } from './sprites.js';
 import { startLoop } from './loop.js';
 import manifest from '../../public/assets/sprites/manifest.json';
 
 const SCALE = 2; // 1 game-pixel = 2 screen-pixel (estetika pixelated)
-const SAVE_KEY = 'pa-world-v1';
 
 async function boot() {
   const canvas = document.getElementById('game');
@@ -83,7 +85,23 @@ async function boot() {
   recalcStats(player);
   player.hp = player.maxHp;
   let satietyTimer = 0;
+  let saveTimer = 0; // auto-save tiap 15 detik
   const inv = createInventory();
+  const party = createParty();
+  // Posisi follower pendamping (paralel party.members).
+  let followers = [];
+  function syncFollowers() {
+    followers = party.members.map((m, i) => {
+      const f = followers[i];
+      return f && f.id === m.id ? f : { id: m.id, x: player.x - 40 - i * 36, y: player.y + 30 };
+    });
+  }
+  // Sprite pendamping (cache).
+  const companionImgs = {};
+  await Promise.all(Object.values(COMPANIONS).map(async (c) => {
+    const entry = manifest[c.sprite] || {};
+    companionImgs[c.id] = await loadImage(`./assets/sprites/${entry.file || c.sprite + '.png'}`);
+  }));
   const monsters = dungeonWorld.monsterSpawns.map((s) => createMonster(s.x, s.y, s.def));
   // NPC di field: dekat gerbang Hanseong (jalur selatan).
   const npcs = [
@@ -102,19 +120,51 @@ async function boot() {
     npcImgs[id] = await loadImage(`./assets/sprites/${entry.file || id + '.png'}`);
   }));
 
-  // Pulihkan posisi terakhir (mis. kembali dari index.html).
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(SAVE_KEY) || 'null');
-    if (saved && (saved.map === 'field' || saved.map === 'dungeon')) {
-      active = saved.map;
-      player.x = saved.x; player.y = saved.y;
-      gold = saved.gold || 0;
+  // Muat save permanen (bila ada); fallback migrasi sessionStorage demo lama.
+  function saveState() {
+    writeSave({ player, inv, gold, active, chestLooted, party });
+  }
+  {
+    const d = readSave();
+    if (d) {
+      active = d.map;
+      player.x = d.x; player.y = d.y;
+      gold = d.gold;
+      chestLooted = d.chestLooted;
+      Object.assign(player, {
+        level: d.player.level, xp: d.player.xp, statPoints: d.player.statPoints,
+        stats: { ...d.player.stats },
+      });
+      player.equip = { ...d.player.equip };
+      player.satiety = d.player.satiety;
+      // Validasi equipment & inventory terhadap definisi saat ini.
+      for (const slot of ['weapon', 'armor']) {
+        if (player.equip[slot] && !getItemDef(player.equip[slot])) player.equip[slot] = null;
+      }
+      for (const [id, qty] of Object.entries(d.inv || {})) {
+        if (getItemDef(id) && qty > 0) { try { addItem(inv, id, qty); } catch { /* abaikan */ } }
+      }
+      for (const m of d.party || []) {
+        if (getCompanionDef(m.id)) {
+          party.members.push({ id: m.id, level: Math.min(m.level, MAX_LEVEL), xp: Math.max(0, m.xp), hp: 1 });
+        }
+      }
+      recalcStats(player);
+      player.hp = Math.min(d.player.hp, player.maxHp);
+      player.mana = Math.min(d.player.mana, player.maxMana);
+      for (const m of party.members) {
+        const def = getCompanionDef(m.id);
+        m.hp = Math.min(memberMaxHp(def, m.level), memberMaxHp(def, m.level));
+      }
+      syncFollowers();
+    } else {
+      const legacy = migrateLegacy();
+      if (legacy) {
+        active = legacy.map;
+        player.x = legacy.x; player.y = legacy.y;
+        gold = legacy.gold;
+      }
     }
-  } catch { /* abaikan */ }
-
-  function savePos() {
-    try { sessionStorage.setItem(SAVE_KEY, JSON.stringify({ map: active, x: player.x, y: player.y, gold })); }
-    catch { /* abaikan */ }
   }
 
   // Hadiah tiap monster mati: emas + pulih 15 HP + roll drop item + XP (skala level).
@@ -125,11 +175,18 @@ async function boot() {
     floaters.push({ x: m.x, y: m.y - 88, text: '+' + g + ' 🪙', color: '#ffd54a', ttl: 1.2 });
     rollDrops(m);
     const ups = gainXp(player, m.level * 10); // XP terukur: 10 × level monster
+    const pups = gainPartyXp(party, m.level * 10); // pendamping: 50%
     if (ups > 0) {
       player.hp = player.maxHp;
       refreshHpBar();
       showToast(`🎉 LEVEL UP! Lv ${player.level} (+${ups * POINTS_PER_LEVEL} poin stat — buka Status)`);
       floaters.push({ x: player.x, y: player.y - 100, text: 'LEVEL UP!', color: '#ffd54a', ttl: 1.6 });
+      saveState();
+    }
+    for (const pu of pups) {
+      const pdef = getCompanionDef(pu.id);
+      const mem = party.members.find((x) => x.id === pu.id);
+      showToast(`🎉 ${pdef.name} naik ke Lv ${mem.level}!`);
     }
     refreshGold();
     refreshHpBar();
@@ -160,6 +217,7 @@ async function boot() {
     floaters.push({ x: player.x, y: player.y - 90, text: '+' + g + ' 🪙', color: '#ffd54a', ttl: 1.5 });
     refreshGold();
     showToast(`🎁 Peti dibuka! +${g} emas.`);
+    saveState();
   }
 
   function resize() {
@@ -220,9 +278,33 @@ async function boot() {
     navBadgeTas.textContent = n > 99 ? '99+' : String(n);
   }
 
+  function hireCompanion(id) {
+    const def = getCompanionDef(id);
+    if (!def) return;
+    if (gold < def.hireCost) { showToast('🪙 Emas tidak cukup!'); return; }
+    const r = hireMember(party, id);
+    if (!r.ok) { showToast('⚠️ ' + r.reason); return; }
+    gold -= r.cost;
+    syncFollowers();
+    refreshGold();
+    showToast(`🤝 ${def.name} bergabung dengan party!`);
+    saveState();
+    if (isMenuOpen()) renderMenu();
+  }
+
+  function dismissCompanion(id) {
+    const def = getCompanionDef(id);
+    if (dismissMember(party, id)) {
+      syncFollowers();
+      showToast(`👋 ${def ? def.name : id} keluar dari party.`);
+      saveState();
+      if (isMenuOpen()) renderMenu();
+    }
+  }
+
   function menuCtx() {
     return {
-      player, inv, gold, manifest,
+      player, inv, gold, party, manifest,
       items: { getItemDef, rarityColor, RARITY, listItems, countItem },
       companions: COMPANIONS,
     };
@@ -303,6 +385,40 @@ async function boot() {
 
   function renderShop() {
     shopListEl.innerHTML = '';
+    // Section BELI: stok merchant.
+    const stock = getShopStock(shopNpc ? shopNpc.id : null);
+    const buyTitle = document.createElement('div');
+    buyTitle.className = 'panel-desc';
+    buyTitle.style.cssText = 'padding:8px 4px 2px;font-weight:700';
+    buyTitle.textContent = '🛒 Beli dari toko';
+    shopListEl.appendChild(buyTitle);
+    if (stock.length === 0) {
+      const d = document.createElement('div');
+      d.className = 'panel-desc'; d.style.padding = '4px';
+      d.textContent = 'Stok kosong.';
+      shopListEl.appendChild(d);
+    }
+    for (const id of stock) {
+      const def = getItemDef(id);
+      if (!def) continue;
+      const row = document.createElement('div');
+      row.className = 'panel-row';
+      const afford = gold >= def.price;
+      row.innerHTML = `
+        <div class="panel-icon">${itemIconHtml(def)}</div>
+        <div class="panel-info">
+          <div class="panel-name" style="color:${rarityColor(def.rarity)}">${def.name}</div>
+          <div class="panel-desc">${RARITY[def.rarity].name} · ${def.price} 🪙</div>
+        </div>
+        <button class="panel-btn" data-act="buy" data-id="${id}" ${afford ? '' : 'disabled'}>Beli</button>`;
+      shopListEl.appendChild(row);
+    }
+    // Section JUAL: barang pemain.
+    const sellTitle = document.createElement('div');
+    sellTitle.className = 'panel-desc';
+    sellTitle.style.cssText = 'padding:8px 4px 2px;font-weight:700';
+    sellTitle.textContent = '💰 Jual ke toko';
+    shopListEl.appendChild(sellTitle);
     const ids = listItems(inv).filter((id) => getItemDef(id).kind !== 'quest');
     if (ids.length === 0) {
       shopListEl.innerHTML = '<div class="panel-desc" style="padding:12px 4px">Tidak ada barang yang bisa dijual.</div>';
@@ -340,6 +456,20 @@ async function boot() {
     refreshGold();
     refreshMenuBadge();
     renderShop();
+    saveState();
+  }
+
+  function buyItem(id) {
+    const def = getItemDef(id);
+    if (!def) return;
+    if (gold < def.price) { showToast('🪙 Emas tidak cukup!'); return; }
+    gold -= def.price;
+    addItem(inv, id, 1);
+    floaters.push({ x: player.x, y: player.y - 90, text: `-${def.price} 🪙`, color: '#ffab91', ttl: 1.2 });
+    refreshGold();
+    refreshMenuBadge();
+    renderShop();
+    saveState();
   }
 
   menuContentEl.addEventListener('click', (e) => {
@@ -350,8 +480,11 @@ async function boot() {
     else if (act === 'equip') equipItem(id);
     else if (act === 'unequip') unequipItem(id);
     else if (act === 'stat') { if (allocateStat(player, id)) renderMenu(); }
+    else if (act === 'hire') hireCompanion(id);
+    else if (act === 'dismiss') dismissCompanion(id);
     else if (act === 'reset-save') {
-      try { localStorage.clear(); sessionStorage.clear(); } catch { /* abaikan */ }
+      clearSave();
+      try { sessionStorage.clear(); } catch { /* abaikan */ }
       location.reload();
     }
   });
@@ -369,8 +502,10 @@ async function boot() {
       else openMenu(b.dataset.tab);
     }));
   shopListEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-act="sell"]');
-    if (btn) sellItem(btn.dataset.id);
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    if (btn.dataset.act === 'sell') sellItem(btn.dataset.id);
+    else if (btn.dataset.act === 'buy') buyItem(btn.dataset.id);
   });
   document.getElementById('shop-close').addEventListener('click', closeShop);
 
@@ -483,7 +618,7 @@ async function boot() {
       `Toko · Penginapan · Balai Latihan · Aula Promosi · Pabrik<br><br>` +
       `Menu kota lengkap memakai sistem dagang yang sudah ada:`,
       [
-        { label: '🛒 Buka Menu Kota', onClick: () => { savePos(); location.href = 'index.html'; } },
+        { label: '🛒 Buka Menu Kota', onClick: () => { saveState(); location.href = 'index.html'; } },
         { label: 'Kembali', onClick: hideOverlay },
       ],
     );
@@ -507,6 +642,8 @@ async function boot() {
       showToast('🌤️ Kembali ke Joseon');
     }
     snapCamera(cam, player.x, player.y);
+    syncFollowers(); // pendamping ikut pindah map
+    saveState();
   }
 
   function update(dt) {
@@ -521,6 +658,23 @@ async function boot() {
     if (!player.fainted && player.mana < player.maxMana) {
       player.mana = Math.min(player.maxMana, player.mana + MANA_REGEN * dt);
       refreshManaBar();
+    }
+    // Auto-save tiap 15 detik.
+    saveTimer += dt;
+    if (saveTimer >= 15) { saveTimer = 0; saveState(); }
+    // Pendamping mengikuti pemain (offset berjenjang).
+    for (let i = 0; i < followers.length; i++) {
+      const f = followers[i];
+      const tx = player.x - 46 - i * 42, ty = player.y + 36;
+      const dx = tx - f.x, dy = ty - f.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 14 && !player.fainted) {
+        const sp = (player.speed || 150) * 1.2;
+        const step = Math.min(dist, sp * dt);
+        const nx = f.x + (dx / dist) * step, ny = f.y + (dy / dist) * step;
+        if (walkableAt(map, nx, f.y)) f.x = nx;
+        if (walkableAt(map, f.x, ny)) f.y = ny;
+      }
     }
 
     const foes = active === 'dungeon' ? monsters : [];
@@ -800,6 +954,17 @@ async function boot() {
       }
     }
 
+    // Pendamping party (mengikuti pemain).
+    for (const f of followers) {
+      const img = companionImgs[f.id];
+      if (!img) continue;
+      const fx = Math.round(f.x - cam.x), fy = Math.round(f.y - cam.y);
+      const fw = 26, fh = 60;
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath(); ctx.ellipse(fx, fy - 2, 9, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.drawImage(img, fx - fw / 2, fy - fh, fw, fh);
+    }
+
     // Angka damage melayang.
     ctx.font = 'bold 15px system-ui, sans-serif';
     ctx.textAlign = 'center';
@@ -818,8 +983,10 @@ async function boot() {
 
   // Handle debug untuk playtest otomatis (world.html hanya demo dev).
   window.__world = { player, cam, input, monsters, floaters, playerAttack, skillStrike, lootChest,
-    get active() { return active; }, get gold() { return gold; },
-    get inv() { return inv; }, useItem, equipItem, unequipItem, sellItem,
+    get active() { return active; }, get gold() { return gold; }, set gold(v) { gold = v; },
+    get inv() { return inv; }, get party() { return party; }, get followers() { return followers; },
+    useItem, equipItem, unequipItem, sellItem, buyItem,
+    hireCompanion, dismissCompanion, saveState,
     openMenu, closeMenu, openShop, rollDrops, gainXp, allocateStat,
     projectiles, npcs, openDialogue, advanceDialogue,
     switchMap, fieldWorld, dungeonWorld, respawnAtInn };

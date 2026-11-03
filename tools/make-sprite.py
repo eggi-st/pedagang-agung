@@ -41,6 +41,49 @@ def near_white(p):
     return p[0] > 225 and p[1] > 225 and p[2] > 225
 
 
+def clear_white_pockets(img, thresh=255, min_area=250):
+    """Hapus kantong putih TERJEPIT (mis. di dalam lengkung busur) yang tidak
+    terjangkau flood-fill tepi. Hanya menyentuh piksel PUTIH MURNI (255)
+    karena background generator selalu #FFFFFF, sedangkan detail putih
+    (baju, mata) selalu punya shading (<255). Pelajaran 2026-11-03:
+    thresh 242 ikut memakan hanbok putih tabib; 255 aman (terukur)."""
+    w, h = img.size
+    px = img.load()
+    # masker piksel putih-buram
+    white = bytearray(w * h)
+    for y in range(h):
+        base = y * w
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a > 128 and r >= thresh and g >= thresh and b >= thresh:
+                white[base + x] = 1
+    seen = bytearray(w * h)
+    cleared = 0
+    for i in range(w * h):
+        if not white[i] or seen[i]:
+            continue
+        # BFS satu komponen putih
+        comp = [i]
+        seen[i] = 1
+        q = deque([i])
+        while q:
+            c = q.popleft()
+            cx, cy = c % w, c // w
+            for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                if 0 <= nx < w and 0 <= ny < h:
+                    ni = ny * w + nx
+                    if white[ni] and not seen[ni]:
+                        seen[ni] = 1
+                        q.append(ni)
+                        comp.append(ni)
+        if len(comp) >= min_area:
+            for c in comp:
+                r, g, b, _a = px[c % w, c // w]
+                px[c % w, c // w] = (r, g, b, 0)
+            cleared += len(comp)
+    return cleared
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -80,6 +123,9 @@ def main():
                 if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen and near_white(px[nx, ny]):
                     seen.add((nx, ny))
                     q.append((nx, ny))
+
+    # Pass 2: bersihkan kantong putih terjepit (tidak terhubung ke tepi).
+    pockets = clear_white_pockets(img)
 
     bbox = img.getbbox()
     if not bbox:
@@ -124,7 +170,7 @@ def main():
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
-    print(f"OK: {out_path} ({crop.size[0]}x{crop.size[1]}) bbox={bbox}")
+    print(f"OK: {out_path} ({crop.size[0]}x{crop.size[1]}) bbox={bbox} pockets={pockets}")
 
 
 if __name__ == "__main__":
