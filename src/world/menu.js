@@ -150,17 +150,39 @@ function renderEquip(ctx) {
 }
 
 function renderParty(ctx) {
-  const cards = Object.values(ctx.companions).map((c) => `
-    <div class="panel-row">
+  const party = ctx.party;
+  const hired = new Set(party.members.map((m) => m.id));
+  let html = `<div class="panel-desc" style="padding:8px 4px">Anggota party (maks 2 pendamping). Ikut berjalan bersamamu dan dapat 50% XP.</div>`;
+  if (party.members.length === 0) {
+    html += '<div class="panel-desc" style="padding:4px">Belum ada pendamping. Rekrut di bawah.</div>';
+  }
+  for (const m of party.members) {
+    const def = ctx.companions[m.id];
+    const maxHp = def.hp + (m.level - 1) * 10;
+    html += `<div class="panel-row">
+      <div class="panel-icon">👤</div>
+      <div class="panel-info">
+        <div class="panel-name">${def.name} <span class="panel-desc">Lv ${m.level} · ${def.role}</span></div>
+        <div class="panel-desc">❤️ ${m.hp}/${maxHp} · ⚔️ ${def.dmg}</div>
+      </div>
+      <button class="panel-btn" data-act="dismiss" data-id="${m.id}">Pecat</button>
+    </div>`;
+  }
+  html += '<div class="panel-desc" style="padding:8px 4px 2px"><b>Rekrut pendamping:</b></div>';
+  for (const c of Object.values(ctx.companions)) {
+    if (hired.has(c.id)) continue;
+    const afford = ctx.gold >= c.hireCost;
+    html += `<div class="panel-row">
       <div class="panel-icon">👤</div>
       <div class="panel-info">
         <div class="panel-name">${c.name} <span class="panel-desc">(${c.role})</span></div>
         <div class="panel-desc">${c.desc}</div>
         <div class="panel-desc">Rekrut: ${c.hireCost} 🪙</div>
       </div>
-      <div class="panel-qty" style="color:#999">Segera hadir</div>
-    </div>`).join('');
-  return `<div class="panel-desc" style="padding:8px 4px">Sistem party & rekrutmen dalam pengembangan. Roster calon pendamping:</div>${cards}`;
+      <button class="panel-btn" data-act="hire" data-id="${c.id}" ${afford ? '' : 'disabled'}>Rekrut</button>
+    </div>`;
+  }
+  return html;
 }
 
 function renderPengaturan() {
