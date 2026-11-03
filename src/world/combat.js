@@ -75,6 +75,7 @@ export function damagePlayer(player, dmg, floaters) {
   if (player.fainted) return false;
   const red = Math.max(1, dmg - (player.defense || 0));
   player.hp -= red;
+  player.hurtT = 0.3; // animasi kena pukul (kilau + goyang)
   if (floaters) floaters.push({ x: player.x, y: player.y - 80, text: '-' + red, color: '#ff5252', ttl: 0.8 });
   if (player.hp <= 0) {
     player.hp = 0;

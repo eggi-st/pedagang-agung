@@ -117,6 +117,14 @@
   #joy-knob { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px;
     margin: -24px 0 0 -24px; border-radius: 50%;
     background: rgba(255, 255, 255, 0.45); border: 2px solid rgba(255, 255, 255, 0.7); }
+  /* Credits-line ala pokesurvivor: atribusi + legal + versi */
+  #credits-line { position: fixed; z-index: 10; right: 10px; bottom: 6px;
+    color: rgba(255,255,255,0.65); font-size: 10px; text-shadow: 0 1px 2px #000; }
+  #credits-line a { color: rgba(255,255,255,0.85); }
+  #legal-content { font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+  @media (pointer: coarse), (max-width: 720px) {
+    #credits-line { bottom: 70px; }
+  }
 </style>
 </head>
 <body>
@@ -159,6 +167,13 @@
   </div>
 </div>
 <div id="joy-base"><div id="joy-knob"></div></div>
+<div id="credits-line">Sprite: Universal LPC (CC-BY-SA 3.0) · <a href="#" id="legal-link">Legal notice</a> · <span id="game-version"></span></div>
+<div id="legal-panel" class="panel" data-ui><div class="panel-box">
+  <div class="panel-title">Legal notice — atribusi sprite</div>
+  <div class="panel-sub">Sprite karakter &amp; monster dibuat dengan Universal LPC Spritesheet Character Generator.<br>Lisensi: CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0 — komersial boleh, atribusi wajib.</div>
+  <div class="panel-list" id="legal-content"></div>
+  <button class="panel-btn panel-close" id="legal-close">Tutup</button>
+</div></div>
 <script type="module" src="./src/world/main.js"></script>
 </body>
 </html>

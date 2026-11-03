@@ -67,13 +67,13 @@ describe('companion defs', () => {
 
 describe('createMonster dengan definisi', () => {
   it('pakai stat definisi (serigala lebih cepat dari goblin)', () => {
-    const s = createMonster(0, 0, 'serigala-hutan');
-    expect(s.name).toBe('Serigala Hutan');
+    const s = createMonster(0, 0, 'skeleton-liar');
+    expect(s.name).toBe('Skeleton Liar');
     expect(s.speed).toBe(60);
     expect(s.hp).toBe(Math.round(22 * 1.15)); // Lv2 scaling
     expect(s.element).toBe('angin');
     expect(s.atkStyle).toBe('contact');
-    expect(s.sprite).toBe('monster-serigala-hutan');
+    expect(s.lpc).toBe('skeleton-liar');
     const g = createMonster(0, 0, 'goblin-hutan');
     expect(s.speed).toBeGreaterThan(g.speed);
   });
