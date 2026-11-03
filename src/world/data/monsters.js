@@ -1,6 +1,8 @@
 // ============================================================
 // src/world/data/monsters.js — definisi monster (data-driven).
-// Sprite mengacu ke id di public/assets/sprites/manifest.json.
+// Sprite: 'lpc' = nama sheet LPC di public/assets/sprites/lpc/<nama>.png
+// (diputar via src/world/lpc.js); 'sprite' = fallback id manifest bila
+// sheet LPC gagal dimuat.
 //
 // element: lihat data/elements.js.
 // level: skala stat = hp * (1+0.15*(lv-1)), dmg * (1+0.12*(lv-1)).
@@ -33,10 +35,11 @@ export const MONSTERS = {
     ],
     desc: 'Goblin usil penghuni hutan Joseon. Lemah tapi berani berkerumun.',
   },
-  'laba-laba-hutan': {
-    id: 'laba-laba-hutan',
-    name: 'Laba-laba Hutan',
-    sprite: 'monster-laba-laba-hutan',
+  'orc-hutan': {
+    id: 'orc-hutan',
+    name: 'Orc Hutan',
+    sprite: 'goblin-hutan', // fallback bila sheet LPC gagal dimuat
+    lpc: 'orc-hutan', // sheet LPC: public/assets/sprites/lpc/orc-hutan.png
     element: 'bumi', level: 2, area: 'Hutan Pinggiran',
     atkStyle: 'contact',
     hp: 26, dmg: 7,
@@ -44,18 +47,19 @@ export const MONSTERS = {
     aggroR: 140, atkRange: 26, atkCd: 1.0,
     goldMin: 6, goldMax: 11,
     drops: [
-      { item: 'kaki-laba-laba', rate: 32 },
-      { item: 'jaring-laba-laba', rate: 22 },
-      { item: 'taring-laba-laba', rate: 8 },
-      { item: 'racun-laba-laba', rate: 3 },
-      { item: 'karapas-laba-laba', rate: 1.5 },
+      { item: 'kulit-orc', rate: 32 },
+      { item: 'taring-orc', rate: 22 },
+      { item: 'cakar-orc', rate: 8 },
+      { item: 'darah-orc', rate: 3 },
+      { item: 'baju-perang-orc', rate: 1.5 },
     ],
-    desc: 'Laba-laba raksasa berlumut. Menyergap dari sangat dekat dengan taring beracun.',
+    desc: 'Orc brutal penghuni hutan. Menyerang dari sangat dekat dengan cakar dan taring.',
   },
-  'serigala-hutan': {
-    id: 'serigala-hutan',
-    name: 'Serigala Hutan',
-    sprite: 'monster-serigala-hutan',
+  'skeleton-liar': {
+    id: 'skeleton-liar',
+    name: 'Skeleton Liar',
+    sprite: 'goblin-hutan', // fallback bila sheet LPC gagal dimuat
+    lpc: 'skeleton-liar', // sheet LPC: public/assets/sprites/lpc/skeleton-liar.png
     element: 'angin', level: 2, area: 'Hutan Pinggiran',
     atkStyle: 'contact',
     hp: 22, dmg: 8,
@@ -63,17 +67,18 @@ export const MONSTERS = {
     aggroR: 150, atkRange: 26, atkCd: 0.9,
     goldMin: 6, goldMax: 12,
     drops: [
-      { item: 'bulu-serigala', rate: 30 },
-      { item: 'taring-serigala', rate: 25 },
-      { item: 'kalung-taring', rate: 3 },
-      { item: 'taring-alpha', rate: 0.5 },
+      { item: 'tulang-belulang', rate: 30 },
+      { item: 'tengkorak-retak', rate: 25 },
+      { item: 'kalung-tengkorak', rate: 3 },
+      { item: 'tengkorak-raja', rate: 0.5 },
     ],
-    desc: 'Pemburu cepat. Menerjang dari sangat dekat, gigitannya dalam.',
+    desc: 'Kerangka hidup yang bergerak secepat angin. Serangannya menusuk dari dekat.',
   },
-  'jamur-raksasa': {
-    id: 'jamur-raksasa',
-    name: 'Jamur Raksasa',
-    sprite: 'monster-jamur-raksasa',
+  'troll-rawa': {
+    id: 'troll-rawa',
+    name: 'Troll Rawa',
+    sprite: 'goblin-hutan', // fallback bila sheet LPC gagal dimuat
+    lpc: 'troll-rawa', // sheet LPC: public/assets/sprites/lpc/troll-rawa.png
     element: 'air', level: 3, area: 'Hutan Dalam',
     atkStyle: 'ranged',
     hp: 55, dmg: 4,
@@ -82,11 +87,11 @@ export const MONSTERS = {
     fireRange: 185, keepDist: 110, projSpeed: 170,
     goldMin: 8, goldMax: 14,
     drops: [
-      { item: 'spora-jamur', rate: 30 },
-      { item: 'jamur-biru', rate: 12 },
-      { item: 'tudung-spora', rate: 2 },
+      { item: 'lendir-troll', rate: 30 },
+      { item: 'batu-rawa', rate: 12 },
+      { item: 'kulit-troll', rate: 2 },
     ],
-    desc: 'Jamur tua yang hidup. Menyemburkan spora dari kejauhan.',
+    desc: 'Troll rawa yang besar. Melempar batu dari kejauhan.',
   },
 };
 

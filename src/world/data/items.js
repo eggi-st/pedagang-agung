@@ -131,7 +131,7 @@ export const ITEMS = {
     rarity: 'rare', kind: 'special', price: 60,
     desc: 'Jimat tulang ukiran goblin. Dipercaya membawa hoki.',
   },
-  // ---- Drop eksklusif Serigala Hutan (angin) ----
+  // ---- LEGACY: Drop eksklusif Serigala Hutan (pra-LPC) ----
   'bulu-serigala': {
     id: 'bulu-serigala', name: 'Bulu Serigala', sprite: null, icon: '🪶',
     rarity: 'common', kind: 'sellable', price: 4,
@@ -143,7 +143,7 @@ export const ITEMS = {
     statBonus: { str: 4, agi: 2 },
     desc: 'Kalung taring serigala. +4 serangan.',
   },
-  // ---- Drop eksklusif Laba-laba Hutan (bumi): bagian tubuh laba-laba ----
+  // ---- LEGACY: Drop eksklusif Laba-laba Hutan (pra-LPC) ----
   'kaki-laba-laba': {
     id: 'kaki-laba-laba', name: 'Kaki Laba-laba', sprite: null, icon: '🦵',
     rarity: 'common', kind: 'sellable', price: 4,
@@ -170,7 +170,73 @@ export const ITEMS = {
     statBonus: { vit: 4 },
     desc: 'Karapas keras berlumut. +20 HP maks.',
   },
-  // ---- Drop eksklusif Jamur Raksasa (air) ----
+  // ---- Drop eksklusif Orc Hutan (bumi) — roster LPC 3 Nov 2026 ----
+  'kulit-orc': {
+    id: 'kulit-orc', name: 'Kulit Orc', sprite: null, icon: '🟩',
+    rarity: 'common', kind: 'sellable', price: 4,
+    desc: 'Kulit orc hijau tebal. Bahan armor kasar.',
+  },
+  'taring-orc': {
+    id: 'taring-orc', name: 'Taring Orc', sprite: null, icon: '🦷',
+    rarity: 'common', kind: 'sellable', price: 6,
+    desc: 'Taring orc runcing. Laku di pasar.',
+  },
+  'cakar-orc': {
+    id: 'cakar-orc', name: 'Cakar Orc', sprite: null, icon: '🐾',
+    rarity: 'uncommon', kind: 'sellable', price: 14,
+    desc: 'Cakar tajam. Dicari pandai besi.',
+  },
+  'darah-orc': {
+    id: 'darah-orc', name: 'Darah Orc', sprite: null, icon: '🩸',
+    rarity: 'rare', kind: 'special', price: 70,
+    desc: 'Darah orc pekat. Bahan ramuan kuat.',
+  },
+  'baju-perang-orc': {
+    id: 'baju-perang-orc', name: 'Baju Perang Orc', sprite: null, icon: '🦺',
+    rarity: 'rare', kind: 'equipment', price: 150, slot: 'armor',
+    statBonus: { vit: 4 },
+    desc: 'Baju perang kulit orc. +20 HP maks.',
+  },
+  // ---- Drop eksklusif Skeleton Liar (angin) — roster LPC 3 Nov 2026 ----
+  'tulang-belulang': {
+    id: 'tulang-belulang', name: 'Tulang Belulang', sprite: null, icon: '🦴',
+    rarity: 'common', kind: 'sellable', price: 4,
+    desc: 'Tulang kerangka liar. Bahan kerajinan.',
+  },
+  'tengkorak-retak': {
+    id: 'tengkorak-retak', name: 'Tengkorak Retak', sprite: null, icon: '💀',
+    rarity: 'uncommon', kind: 'sellable', price: 12,
+    desc: 'Tengkorak retak. Masih berdenyut aneh.',
+  },
+  'kalung-tengkorak': {
+    id: 'kalung-tengkorak', name: 'Kalung Tengkorak', sprite: null, icon: '📿',
+    rarity: 'rare', kind: 'equipment', price: 120, slot: 'armor',
+    statBonus: { str: 4, agi: 2 },
+    desc: 'Kalung tulang kerangka. +4 serangan.',
+  },
+  'tengkorak-raja': {
+    id: 'tengkorak-raja', name: 'Tengkorak Raja', sprite: null, icon: '👑',
+    rarity: 'legendary', kind: 'special', price: 800,
+    desc: 'Tengkorak raja kerangka kuno. Ditakuti dan dihormati.',
+  },
+  // ---- Drop eksklusif Troll Rawa (air) — roster LPC 3 Nov 2026 ----
+  'lendir-troll': {
+    id: 'lendir-troll', name: 'Lendir Troll', sprite: null, icon: '🟢',
+    rarity: 'common', kind: 'sellable', price: 5,
+    desc: 'Lendir troll rawa. Bahan perekat alami.',
+  },
+  'batu-rawa': {
+    id: 'batu-rawa', name: 'Batu Rawa', sprite: null, icon: '🪨',
+    rarity: 'rare', kind: 'sellable', price: 40,
+    desc: 'Batu rawa yang dilempar troll. Keras luar biasa.',
+  },
+  'kulit-troll': {
+    id: 'kulit-troll', name: 'Kulit Troll', sprite: null, icon: '🛡️',
+    rarity: 'epic', kind: 'equipment', price: 350, slot: 'armor',
+    statBonus: { vit: 6, wis: 4 },
+    desc: 'Kulit troll tebal berlumut. +40 HP maks.',
+  },
+  // ---- LEGACY (roster lama pra-LPC; dipertahankan agar save lama tak rusak) ----
   'spora-jamur': {
     id: 'spora-jamur', name: 'Spora Jamur', sprite: null, icon: '🌫️',
     rarity: 'common', kind: 'sellable', price: 5,

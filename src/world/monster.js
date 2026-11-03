@@ -12,7 +12,7 @@ export const MONSTER_AGGRO_R = 130; // default bila definisi tak punya
 export const MONSTER_ATK_RANGE = 30;
 export const MONSTER_RESPAWN_T = 20; // detik hingga respawn
 
-// defIdOrName: id definisi di data/monsters.js (mis. 'serigala-hutan').
+// defIdOrName: id definisi di data/monsters.js (mis. 'orc-hutan').
 // Kompatibilitas lama: string nama bebas -> pakai stat goblin standar.
 export function createMonster(x, y, defIdOrName = 'goblin-hutan') {
   const def = getMonsterDef(defIdOrName);
@@ -27,6 +27,9 @@ export function createMonster(x, y, defIdOrName = 'goblin-hutan') {
     x, y, name,
     defId: def ? def.id : null,
     sprite: s.sprite || 'goblin-hutan',
+    lpc: s.lpc || null,       // nama sheet LPC (tanpa .png); null = sprite biasa
+    lpcPlayer: null,          // diisi main.js: createLpc() bila lpc ada
+    lpcSheet: null,           // diisi main.js: Image sheet LPC
     element: s.element || 'neutral',
     level, area: s.area || '-',
     atkStyle: s.atkStyle || 'melee', // 'contact' | 'melee' | 'ranged'
@@ -52,6 +55,7 @@ export function createMonster(x, y, defIdOrName = 'goblin-hutan') {
     atkCd: 0,                  // cooldown serangan monster
     atkCdMax: s.atkCd ?? 1.0,
     respawnT: 0,               // hitung mundur saat mati
+    deathT: 0,                 // sisa animasi roboh (detik) — diisi saat mati
     aggro: false,              // true = sedang mengejar/menyerang
     hurtT: 0,                  // sisa animasi Hurt (detik)
     atkAnimT: 0,               // sisa animasi Attack (detik)
@@ -109,6 +113,7 @@ export function damageMonster(m, dmg, floaters, atkElement = 'neutral', crit = f
     m.hp = 0;
     m.state = 'dead';
     m.respawnT = MONSTER_RESPAWN_T;
+    m.deathT = 0.6; // animasi roboh 0,6 detik sebelum hilang
     m.aggro = false;
     if (floaters) floaters.push({ x: m.x, y: m.y - 70, text: 'KO!', color: '#ff8a65', ttl: 1.2 });
     return true;
@@ -122,8 +127,9 @@ export function updateMonster(m, dt, map, player) {
   if (m.hurtT > 0) m.hurtT -= dt;
   if (m.atkAnimT > 0) m.atkAnimT -= dt;
 
-  // Mati: hitung mundur respawn di titik awal.
+  // Mati: animasi roboh dulu, lalu hitung mundur respawn di titik awal.
   if (m.state === 'dead') {
+    if (m.deathT > 0) m.deathT -= dt;
     m.respawnT -= dt;
     if (m.respawnT <= 0) {
       m.state = 'idle';

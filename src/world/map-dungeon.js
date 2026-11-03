@@ -41,9 +41,9 @@ export function buildDungeon() {
     chest,
     monsterSpawns: [
       { x: 19.5 * 32, y: 24.5 * 32, def: 'goblin-hutan' },
-      { x: 21.5 * 32, y: 26.5 * 32, def: 'laba-laba-hutan' },
-      { x: 16.5 * 32, y: 7.5 * 32, def: 'serigala-hutan' },
-      { x: 23.5 * 32, y: 8.5 * 32, def: 'jamur-raksasa' },
+      { x: 21.5 * 32, y: 26.5 * 32, def: 'orc-hutan' },
+      { x: 16.5 * 32, y: 7.5 * 32, def: 'skeleton-liar' },
+      { x: 23.5 * 32, y: 8.5 * 32, def: 'troll-rawa' },
     ],
   };
 }

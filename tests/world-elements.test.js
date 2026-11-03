@@ -36,12 +36,12 @@ describe('monster: elemen, level, gaya serang', () => {
       expect(['contact', 'melee', 'ranged'], id).toContain(m.atkStyle);
     }
   });
-  it('level scaling: serigala Lv2 & jamur Lv3 lebih kuat dari base', () => {
-    const s = createMonster(0, 0, 'serigala-hutan');
+  it('level scaling: skeleton Lv2 & troll Lv3 lebih kuat dari base', () => {
+    const s = createMonster(0, 0, 'skeleton-liar');
     expect(s.level).toBe(2);
     expect(s.hp).toBe(Math.round(22 * 1.15));
     expect(s.dmg).toBe(Math.round(8 * 1.12));
-    const j = createMonster(0, 0, 'jamur-raksasa');
+    const j = createMonster(0, 0, 'troll-rawa');
     expect(j.level).toBe(3);
     expect(j.hp).toBe(Math.round(55 * 1.3));
     expect(j.atkStyle).toBe('ranged');
@@ -50,7 +50,7 @@ describe('monster: elemen, level, gaya serang', () => {
     expect(g.element).toBe('bumi');
   });
   it('ranged menembak proyektil (bukan hitPlayer)', () => {
-    const j = createMonster(0, 0, 'jamur-raksasa');
+    const j = createMonster(0, 0, 'troll-rawa');
     const player = { x: 150, y: 0, fainted: false };
     const res = updateMonster(j, 0.016, [[]], player);
     expect(res && res.fireProjectile).toBeTruthy();
@@ -58,7 +58,7 @@ describe('monster: elemen, level, gaya serang', () => {
     expect(res.fireProjectile.dmg).toBe(j.dmg);
   });
   it('ranged mundur bila pemain terlalu dekat', () => {
-    const j = createMonster(200, 160, 'jamur-raksasa');
+    const j = createMonster(200, 160, 'troll-rawa');
     const x0 = j.x;
     const player = { x: 250, y: 160, fainted: false }; // jarak 50 < keepDist 110
     // map minimal: semua GRASS (walkable)
@@ -74,8 +74,8 @@ describe('damage berelemen', () => {
     damageMonster(g, 10, [], 'api');
     expect(g.hp).toBe(30 - Math.max(1, Math.round(10 * 0.7)));
   });
-  it('api vs serigala (angin) = effective 1.5x + floater Effective!', () => {
-    const s = createMonster(0, 0, 'serigala-hutan');
+  it('api vs skeleton (angin) = effective 1.5x + floater Effective!', () => {
+    const s = createMonster(0, 0, 'skeleton-liar');
     const floaters = [];
     const hp0 = s.hp;
     damageMonster(s, 10, floaters, 'api');

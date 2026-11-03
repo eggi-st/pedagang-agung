@@ -26,6 +26,9 @@ import { updateCompanions } from './companion-ai.js';
 import { getShopStock } from './data/shop.js';
 import { writeSave, readSave, clearSave, migrateLegacy } from './save.js';
 import { loadImage } from './sprites.js';
+import { SPRITE_HEIGHT, drawSize, drawShadow, drawActor, drawSheetFrame, flashProgress } from './draw.js';
+import { createLpc, lpcPlay, lpcUpdate, lpcFrame, LPC_FRAME } from './lpc.js';
+import { GAME_VERSION } from './version.js';
 import { startLoop } from './loop.js';
 import manifest from '../../public/assets/sprites/manifest.json';
 
@@ -46,6 +49,10 @@ async function boot() {
 
   const tiles = paintTiles();
   const playerImg = await loadImage('./assets/sprites/pedagang-a.png');
+  // Sheet LPC pemain: bila belum ada (mis. PNG belum diupload ke repo),
+  // game tetap jalan dengan sprite AI biasa.
+  let lpcSheet = null;
+  try { lpcSheet = await loadImage('./assets/sprites/lpc/pedagang-lpc.png'); } catch { /* fallback */ }
   // Sprite monster per definisi + per state (cache).
   // Sumber kebenaran = manifest.json: key "goblin-hutan" (dasar/Idle)
   // atau "goblin-hutan-Walk" (state). Hilang -> fallback dasar.
@@ -74,12 +81,61 @@ async function boot() {
     return monsterImgs[m.sprite];
   }
 
+  // Sheet LPC untuk monster roster baru (lihat data/monsters.js: def.lpc).
+  const lpcMonsterSheets = {};
+  await Promise.all(['orc-hutan', 'skeleton-liar', 'troll-rawa'].map((n) =>
+    loadImage(`./assets/sprites/lpc/${n}.png`)
+      .then((img) => { lpcMonsterSheets[n] = img; })
+      .catch(() => {}) // gagal = fallback ke sprite biasa via def.sprite
+  ));
+
+  // Pilih animasi LPC monster dari status (prioritas: mati > kena > serang > jalan > diam).
+  function updateMonsterLpc(m, dt) {
+    const L = m.lpcPlayer;
+    if (!L) return;
+    if (m.state === 'dead') lpcPlay(L, 'hurt', m.dir);
+    else if (m.hurtT > 0) lpcPlay(L, 'hurt', m.dir);
+    else if (m.atkAnimT > 0) lpcPlay(L, m.atkStyle === 'ranged' ? 'thrust' : 'slash', m.dir);
+    else if (m.state === 'walk' || m.state === 'chase') lpcPlay(L, 'walk', m.dir);
+    else lpcPlay(L, 'idle', m.dir);
+    lpcUpdate(L, dt);
+  }
+
+  // Credits-line ala pokesurvivor: atribusi sprite + legal notice + versi berjalan.
+  const verEl = document.getElementById('game-version');
+  if (verEl) verEl.textContent = 'v' + GAME_VERSION;
+  const legalPanel = document.getElementById('legal-panel');
+  const legalContent = document.getElementById('legal-content');
+  async function showLegal() {
+    if (!legalPanel) return;
+    legalPanel.style.display = 'flex';
+    if (legalContent && !legalContent.dataset.loaded) {
+      legalContent.textContent = 'Memuat atribusi...';
+      const files = ['CREDITS.txt', 'CREDITS-orc-hutan.txt', 'CREDITS-skeleton-liar.txt', 'CREDITS-troll-rawa.txt'];
+      const parts = [];
+      for (const f of files) {
+        try {
+          const t = await (await fetch(`./assets/sprites/lpc/${f}`)).text();
+          parts.push(`=== ${f} ===\n` + t);
+        } catch { parts.push(`=== ${f} ===\n(tidak tersedia)`); }
+      }
+      legalContent.textContent = parts.join('\n\n');
+      legalContent.dataset.loaded = '1';
+    }
+  }
+  const legalLink = document.getElementById('legal-link');
+  if (legalLink) legalLink.addEventListener('click', (e) => { e.preventDefault(); showLegal(); });
+  const legalClose = document.getElementById('legal-close');
+  if (legalClose) legalClose.addEventListener('click', () => { legalPanel.style.display = 'none'; });
+  if (legalPanel) legalPanel.addEventListener('click', (e) => { if (e.target === legalPanel) legalPanel.style.display = 'none'; });
+
   const input = createInput();
   attachKeyboard(input);
   attachTouch(input, canvas);
 
   const cam = createCamera(400, 300);
   const player = createPlayer(fieldWorld.spawn.x, fieldWorld.spawn.y);
+  if (lpcSheet) player.lpc = createLpc(); // animasi frame LPC; tanpa sheet = sprite AI biasa
   Object.assign(player, newProgress()); // level, xp, statPoints, stats
   player.equip = { weapon: null, armor: null }; // slot equipment
   player.satiety = 100; player.maxSatiety = 100; // rasa lapar (habis = lemah)
@@ -87,6 +143,7 @@ async function boot() {
   player.hp = player.maxHp;
   let satietyTimer = 0;
   let saveTimer = 0; // auto-save tiap 15 detik
+  let elapsed = 0; // waktu global untuk animasi napas NPC
   const inv = createInventory();
   const party = createParty();
   // Posisi follower pendamping (paralel party.members).
@@ -95,7 +152,8 @@ async function boot() {
     followers = party.members.map((m, i) => {
       const f = followers[i];
       if (f && f.id === m.id) return f;
-      return { id: m.id, x: player.x - 40 - i * 36, y: player.y + 30, cd: 0, atkAnim: 0, engaged: false };
+      return { id: m.id, x: player.x - 40 - i * 36, y: player.y + 30, cd: 0, atkAnim: 0, engaged: false,
+               walkPhase: Math.random() * 6, px: player.x, py: player.y };
     });
   }
   // Sprite pendamping (cache).
@@ -105,6 +163,12 @@ async function boot() {
     companionImgs[c.id] = await loadImage(`./assets/sprites/${entry.file || c.sprite + '.png'}`);
   }));
   const monsters = dungeonWorld.monsterSpawns.map((s) => createMonster(s.x, s.y, s.def));
+  for (const m of monsters) {
+    if (m.lpc && lpcMonsterSheets[m.lpc]) {
+      m.lpcPlayer = createLpc();
+      m.lpcSheet = lpcMonsterSheets[m.lpc];
+    }
+  }
   // NPC di field: dekat gerbang Hanseong (jalur selatan).
   const npcs = [
     createNpc(10.5 * 32, 17.5 * 32, 'penjaga-toko'),
@@ -656,6 +720,18 @@ async function boot() {
     if (player.dashAnim > 0) player.dashAnim -= dt;
     if (player.skill1Cd > 0) player.skill1Cd -= dt;
     if (player.skill2Cd > 0) player.skill2Cd -= dt;
+    if (player.hurtT > 0) player.hurtT -= dt;
+    elapsed += dt;
+    // Pilih animasi LPC pemain dari status.
+    if (player.lpc) {
+      const L = player.lpc;
+      if (player.fainted) lpcPlay(L, 'hurt', player.dir);
+      else if (player.hurtT > 0) lpcPlay(L, 'hurt', player.dir);
+      else if (player.atkAnim > 0) lpcPlay(L, 'slash', player.dir);
+      else if (player.moving) lpcPlay(L, 'walk', player.dir);
+      else lpcPlay(L, 'idle', player.dir);
+      lpcUpdate(L, dt);
+    }
     // Mana pulih otomatis tiap detik.
     if (!player.fainted && player.mana < player.maxMana) {
       player.mana = Math.min(player.maxMana, player.mana + MANA_REGEN * dt);
@@ -687,6 +763,13 @@ async function boot() {
         if (walkableAt(map, nx, f.y)) f.x = nx;
         if (walkableAt(map, f.x, ny)) f.y = ny;
       }
+    }
+
+    // Fase jalan pendamping: maju saat benar-benar bergerak (untuk animasi).
+    for (const f of followers) {
+      const moved = Math.hypot(f.x - (f.px ?? f.x), f.y - (f.py ?? f.y));
+      if (moved > 0.4 && !player.fainted) f.walkPhase += dt * 10;
+      f.px = f.x; f.py = f.y;
     }
 
     const foes = active === 'dungeon' ? monsters : [];
@@ -724,6 +807,7 @@ async function boot() {
     if (active === 'dungeon') {
       for (const m of monsters) {
         const res = updateMonster(m, dt, map, player);
+        updateMonsterLpc(m, dt);
         if (res && res.hitPlayer) {
           if (damagePlayer(player, res.hitPlayer, floaters)) onFaint();
           refreshHpBar();
@@ -888,31 +972,57 @@ async function boot() {
       }
     }
 
-    // Monster (hanya di dungeon).
+    // Monster (hanya di dungeon). Ukuran ikut rasio asli (standar draw.js),
+    // bukan kotak paksa — laba-laba lebar tetap lebar.
     if (active === 'dungeon') {
       for (const m of monsters) {
-        if (m.state === 'dead') continue;
+        const dead = m.state === 'dead';
+        if (dead && m.deathT <= 0) continue; // animasi roboh selesai -> hilang
         const mx = Math.round(m.x - cam.x), my = Math.round(m.y - cam.y);
+        const useLpc = !!(m.lpcPlayer && m.lpcSheet);
+        const img = useLpc ? null : (monsterImage(m) || monsterImgs['goblin-hutan']);
+        const { w: dw, h: dh } = useLpc
+          ? { w: SPRITE_HEIGHT.monster, h: SPRITE_HEIGHT.monster } // frame LPC persegi
+          : img ? drawSize(img.naturalWidth, img.naturalHeight, SPRITE_HEIGHT.monster)
+                : { w: 40, h: SPRITE_HEIGHT.monster };
+        const fall = dead ? 1 - Math.max(0, m.deathT) / 0.6 : 0;
+        // Goyang jalan, terjang menyerang, kilau saat kena pukul.
+        // (Monster LPC: frame animasi asli, tanpa goyang prosedural.)
+        const walking = m.state === 'walk' || m.state === 'chase';
+        const tilt = !useLpc && walking && !dead ? Math.sin(m.walkPhase) * 0.07 : 0;
+        const bobY = !useLpc && walking && !dead ? Math.abs(Math.sin(m.walkPhase)) * -2.5 : 0;
+        let lungeX = 0, lungeY = 0;
+        if (m.atkAnimT > 0 && !dead) {
+          const k = Math.sin(Math.min(1, m.atkAnimT / 0.3) * Math.PI) * 10;
+          const dx = player.x - m.x, dy = player.y - m.y;
+          const len = Math.hypot(dx, dy) || 1;
+          lungeX = (dx / len) * k; lungeY = (dy / len) * k;
+        }
+        const flash = !dead && m.hurtT > 0 ? flashProgress(m.hurtT, 0.35) : 0;
         // Bar HP (tampil kalau terluka / mengejar) + label level & elemen.
-        if (m.hp < m.maxHp || m.aggro) {
-          const bw = 36, pct = m.hp / m.maxHp;
+        if (!dead && (m.hp < m.maxHp || m.aggro)) {
+          const bw = Math.max(36, dw * 0.9), pct = m.hp / m.maxHp;
+          const by = my - dh - 16;
           ctx.fillStyle = 'rgba(0,0,0,0.55)';
-          ctx.fillRect(mx - bw / 2, my - 62, bw, 5);
+          ctx.fillRect(mx - bw / 2, by, bw, 5);
           ctx.fillStyle = pct > 0.5 ? '#4caf50' : pct > 0.25 ? '#ff9800' : '#f44336';
-          ctx.fillRect(mx - bw / 2 + 1, my - 61, (bw - 2) * pct, 3);
+          ctx.fillRect(mx - bw / 2 + 1, by + 1, (bw - 2) * pct, 3);
           ctx.font = '10px system-ui, sans-serif';
           ctx.textAlign = 'left';
           const el = ELEMENTS[m.element] || ELEMENTS.neutral;
           ctx.fillStyle = 'rgba(0,0,0,0.6)';
-          ctx.fillText(`Lv${m.level} ${el.icon}`, mx - bw / 2 + 1, my - 65);
+          ctx.fillText(`Lv${m.level} ${el.icon}`, mx - bw / 2 + 1, by - 3);
           ctx.fillStyle = '#fff';
-          ctx.fillText(`Lv${m.level} ${el.icon}`, mx - bw / 2, my - 66);
+          ctx.fillText(`Lv${m.level} ${el.icon}`, mx - bw / 2, by - 4);
         }
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath(); ctx.ellipse(mx, my - 2, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
-        const bob = (m.state === 'walk' || m.state === 'chase') ? Math.sin(m.walkPhase) * 1.5 : 0;
-        const img = monsterImage(m) || monsterImgs['goblin-hutan'];
-        if (img) ctx.drawImage(img, mx - 18, my - 44 + bob, 36, 44);
+        drawShadow(ctx, mx, my, dw, dead ? 0.1 : 0.25);
+        if (useLpc) {
+          const fr = lpcFrame(m.lpcPlayer);
+          drawSheetFrame(ctx, m.lpcSheet, fr.sx, fr.sy, LPC_FRAME, mx, my, dw, dh,
+            { dx: lungeX, dy: lungeY, flash, fall });
+        } else {
+          drawActor(ctx, img, mx, my, dw, dh, { tilt, dx: lungeX, dy: bobY + lungeY, flash, fall });
+        }
       }
       // Proyektil monster (lingkaran sesuai warna elemen).
       // Proyektil ramah (panah pemanah): kuning keemasan, lebih kecil.
@@ -926,33 +1036,53 @@ async function boot() {
       }
     }
 
-    // NPC (hanya di field).
+    // NPC (hanya di field). Napas halus + rasio asli (tidak melar lagi).
     if (active === 'field') {
       for (const n of npcs) {
         const nx = Math.round(n.x - cam.x), ny = Math.round(n.y - cam.y);
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.beginPath(); ctx.ellipse(nx, ny - 2, 10, 4, 0, 0, Math.PI * 2); ctx.fill();
         const img = npcImgs[n.sprite];
-        if (img) ctx.drawImage(img, nx - 15, ny - 52, 30, 52);
+        const { w: dw, h: dh } = img
+          ? drawSize(img.naturalWidth, img.naturalHeight, SPRITE_HEIGHT.npc)
+          : { w: 24, h: SPRITE_HEIGHT.npc };
+        drawShadow(ctx, nx, ny, dw, 0.2);
+        drawActor(ctx, img, nx, ny, dw, dh, { breathe: elapsed * 2 + n.x });
         ctx.font = '11px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillText(n.name, nx + 1, ny - 57);
+        ctx.fillText(n.name, nx + 1, ny - dh - 5);
         ctx.fillStyle = n.talking ? '#ffd54a' : '#fff';
-        ctx.fillText(n.name, nx, ny - 58);
+        ctx.fillText(n.name, nx, ny - dh - 6);
       }
     }
 
-    // Pemain.
-    const pw = 30, ph = 70;
+    // Pemain. LPC bila sheet ada; fallback sprite AI bila PNG belum tersedia.
+    const usePlayerLpc = !!(player.lpc && lpcSheet);
+    const { w: pw, h: ph } = usePlayerLpc
+      ? { w: SPRITE_HEIGHT.player, h: SPRITE_HEIGHT.player } // frame LPC persegi
+      : drawSize(playerImg.naturalWidth, playerImg.naturalHeight, SPRITE_HEIGHT.player);
     const px = Math.round(player.x - cam.x), py = Math.round(player.y - cam.y);
-    if (!player.fainted) {
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
-      ctx.beginPath(); ctx.ellipse(px, py - 2, 10, 4, 0, 0, Math.PI * 2); ctx.fill();
-      const bob = player.moving ? Math.sin(player.walkPhase) * 1.5 : 0;
-      ctx.drawImage(playerImg, px - pw / 2, py - ph + bob, pw, ph);
+    const fainted = player.fainted;
+    {
+      const bob = !usePlayerLpc && player.moving && !fainted ? Math.abs(Math.sin(player.walkPhase)) * -2.5 : 0;
+      const tilt = !usePlayerLpc && player.moving && !fainted ? Math.sin(player.walkPhase) * 0.05 : 0;
+      let lungeX = 0, lungeY = 0;
+      if (player.atkAnim > 0 && !fainted) {
+        const k = Math.sin(Math.min(1, player.atkAnim / 0.25) * Math.PI) * 12;
+        const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[player.dir] || [0, 1];
+        lungeX = d[0] * k; lungeY = d[1] * k;
+      }
+      const flash = !fainted && player.hurtT > 0 ? flashProgress(player.hurtT, 0.3) : 0;
+      drawShadow(ctx, px, py, pw, fainted ? 0.1 : 0.25);
+      if (usePlayerLpc) {
+        const fr = lpcFrame(player.lpc);
+        drawSheetFrame(ctx, lpcSheet, fr.sx, fr.sy, LPC_FRAME, px, py, pw, ph,
+          { dx: lungeX, dy: lungeY, flash, fall: fainted ? 1 : 0 });
+      } else {
+        drawActor(ctx, playerImg, px, py, pw, ph,
+          { tilt, dx: lungeX, dy: bob + lungeY, flash, fall: fainted ? 1 : 0 });
+      }
       // Busur tebasan (api = oranye, lebih besar).
-      if (player.atkAnim > 0) {
+      if (player.atkAnim > 0 && !fainted) {
         const fire = player.atkAnimColor === 'fire';
         const base = { up: -Math.PI / 2, right: 0, down: Math.PI / 2, left: Math.PI }[player.dir];
         const max = fire ? 0.25 : 0.18;
@@ -971,28 +1101,33 @@ async function boot() {
         }
       }
       // Efek dash: kilatan putih.
-      if (player.dashAnim > 0) {
+      if (player.dashAnim > 0 && !fainted) {
         ctx.fillStyle = `rgba(255, 255, 255, ${player.dashAnim / 0.25 * 0.45})`;
         ctx.beginPath(); ctx.ellipse(px, py - 30, 22, 34, 0, 0, Math.PI * 2); ctx.fill();
       }
     }
 
-    // Pendamping party (mengikuti pemain / ikut tempur).
+    // Pendamping party. Rasio asli + goyang jalan + sentakan menyerang.
     for (const f of followers) {
       const img = companionImgs[f.id];
       if (!img) continue;
       const fx = Math.round(f.x - cam.x), fy = Math.round(f.y - cam.y);
-      const fw = 26, fh = 60;
-      ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      ctx.beginPath(); ctx.ellipse(fx, fy - 2, 9, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.drawImage(img, fx - fw / 2, fy - fh, fw, fh);
+      const { w: fw, h: fh } = drawSize(
+        img.naturalWidth, img.naturalHeight, SPRITE_HEIGHT.companion);
+      const bob = Math.abs(Math.sin(f.walkPhase || 0)) * -2;
+      const tilt = Math.sin(f.walkPhase || 0) * 0.05;
+      // Sentakan kecil saat menyerang/menembak.
+      let lungeY = 0;
+      if (f.atkAnim > 0) lungeY = -Math.sin(Math.min(1, f.atkAnim / 0.22) * Math.PI) * 4;
+      drawShadow(ctx, fx, fy, fw, 0.2);
+      drawActor(ctx, img, fx, fy, fw, fh, { tilt, dy: bob + lungeY });
       // Efek tebasan pendekar / tembakan pemanah.
       if (f.atkAnim > 0) {
         const alpha = Math.max(0, f.atkAnim / 0.22);
         ctx.strokeStyle = `rgba(255, 240, 160, ${0.35 + 0.65 * alpha})`;
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(fx, fy - 32, 22, -1.1, 1.1);
+        ctx.arc(fx, fy - fh / 2, 22, -1.1, 1.1);
         ctx.stroke();
       }
     }
