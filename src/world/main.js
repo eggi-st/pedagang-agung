@@ -12,7 +12,7 @@ import { buildDungeon, DUN_W, DUN_H } from './map-dungeon.js';
 import { createInput, attachKeyboard, attachTouch, endTick } from './input.js';
 import { createCamera, snapCamera, followCamera } from './camera.js';
 import { createPlayer, updatePlayer } from './player.js';
-import { createMonster, updateMonster, monsterSpriteState } from './monster.js';
+import { createMonster, updateMonster, monsterSpriteState, damageMonster } from './monster.js';
 import { createNpc, openDialogue, advanceDialogue, closeDialogue } from './npc.js';
 import { createInventory, addItem, removeItem, countItem, listItems, totalCount } from './inventory.js';
 import { getItemDef, rarityColor, RARITY } from './data/items.js';
@@ -22,6 +22,7 @@ import { newProgress, recalcStats, gainXp, allocateStat, POINTS_PER_LEVEL, MANA_
 import { playerAttack, skillStrike, damagePlayer, updateFloaters, spendMana } from './combat.js';
 import { dashPlayer, SKILL1_CD, SKILL1_COST, SKILL2_CD, DASH_COST } from './player.js';
 import { createParty, hireMember, dismissMember, gainPartyXp, memberMaxHp, MAX_MEMBERS } from './party.js';
+import { updateCompanions } from './companion-ai.js';
 import { getShopStock } from './data/shop.js';
 import { writeSave, readSave, clearSave, migrateLegacy } from './save.js';
 import { loadImage } from './sprites.js';
@@ -93,7 +94,8 @@ async function boot() {
   function syncFollowers() {
     followers = party.members.map((m, i) => {
       const f = followers[i];
-      return f && f.id === m.id ? f : { id: m.id, x: player.x - 40 - i * 36, y: player.y + 30 };
+      if (f && f.id === m.id) return f;
+      return { id: m.id, x: player.x - 40 - i * 36, y: player.y + 30, cd: 0, atkAnim: 0, engaged: false };
     });
   }
   // Sprite pendamping (cache).
@@ -662,9 +664,19 @@ async function boot() {
     // Auto-save tiap 15 detik.
     saveTimer += dt;
     if (saveTimer >= 15) { saveTimer = 0; saveState(); }
-    // Pendamping mengikuti pemain (offset berjenjang).
+    // AI tempur pendamping (sebelum follow-loop, agar flag engaged terisi).
+    // Hanya di dungeon; di field semua follower kembali mengikuti.
+    if (active === 'dungeon' && followers.length > 0) {
+      const pairs = followers.map((f, i) => ({ follower: f, member: party.members[i] }))
+        .filter((p) => p.member);
+      updateCompanions(pairs, player, monsters, projectiles, floaters, map, dt, onKill);
+    } else {
+      for (const f of followers) f.engaged = false;
+    }
+    // Pendamping mengikuti pemain (offset berjenjang), kecuali sedang tempur.
     for (let i = 0; i < followers.length; i++) {
       const f = followers[i];
+      if (f.engaged) continue;
       const tx = player.x - 46 - i * 42, ty = player.y + 36;
       const dx = tx - f.x, dy = ty - f.y;
       const dist = Math.hypot(dx, dy);
@@ -726,13 +738,23 @@ async function boot() {
         }
       }
       // Proyektil monster: gerak, kena dinding hilang, kena pemain damage.
+      // Proyektil ramah (panah pemanah): kena monster, tidak kena pemain.
       for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
         p.ttl -= dt;
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         let dead = p.ttl <= 0 || !walkableAt(map, p.x, p.y);
-        if (!dead && !player.fainted && Math.hypot(p.x - player.x, p.y - (player.y - 35)) < 16) {
+        if (!dead && p.friendly) {
+          for (const m of monsters) {
+            if (m.state === 'dead') continue;
+            if (Math.hypot(p.x - m.x, p.y - (m.y - 35)) < 16) {
+              if (damageMonster(m, p.dmg, floaters, p.element || 'neutral', false) && onKill) onKill(m);
+              dead = true;
+              break;
+            }
+          }
+        } else if (!dead && !p.friendly && !player.fainted && Math.hypot(p.x - player.x, p.y - (player.y - 35)) < 16) {
           if (damagePlayer(player, p.dmg, floaters)) onFaint();
           refreshHpBar();
           dead = true;
@@ -893,11 +915,12 @@ async function boot() {
         if (img) ctx.drawImage(img, mx - 18, my - 44 + bob, 36, 44);
       }
       // Proyektil monster (lingkaran sesuai warna elemen).
+      // Proyektil ramah (panah pemanah): kuning keemasan, lebih kecil.
       for (const p of projectiles) {
         const px = Math.round(p.x - cam.x), py = Math.round(p.y - cam.y);
         const el = ELEMENTS[p.element] || ELEMENTS.neutral;
-        ctx.fillStyle = el.color;
-        ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = p.friendly ? '#ffe082' : el.color;
+        ctx.beginPath(); ctx.arc(px, py, p.friendly ? 4 : 6, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = 'rgba(255,255,255,0.75)';
         ctx.beginPath(); ctx.arc(px - 2, py - 2, 2.5, 0, Math.PI * 2); ctx.fill();
       }
@@ -954,7 +977,7 @@ async function boot() {
       }
     }
 
-    // Pendamping party (mengikuti pemain).
+    // Pendamping party (mengikuti pemain / ikut tempur).
     for (const f of followers) {
       const img = companionImgs[f.id];
       if (!img) continue;
@@ -963,6 +986,15 @@ async function boot() {
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
       ctx.beginPath(); ctx.ellipse(fx, fy - 2, 9, 3.5, 0, 0, Math.PI * 2); ctx.fill();
       ctx.drawImage(img, fx - fw / 2, fy - fh, fw, fh);
+      // Efek tebasan pendekar / tembakan pemanah.
+      if (f.atkAnim > 0) {
+        const alpha = Math.max(0, f.atkAnim / 0.22);
+        ctx.strokeStyle = `rgba(255, 240, 160, ${0.35 + 0.65 * alpha})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(fx, fy - 32, 22, -1.1, 1.1);
+        ctx.stroke();
+      }
     }
 
     // Angka damage melayang.
