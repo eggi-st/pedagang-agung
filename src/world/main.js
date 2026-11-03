@@ -684,7 +684,7 @@ async function boot() {
       `Toko · Penginapan · Balai Latihan · Aula Promosi · Pabrik<br><br>` +
       `Menu kota lengkap memakai sistem dagang yang sudah ada:`,
       [
-        { label: '🛒 Buka Menu Kota', onClick: () => { saveState(); location.href = 'index.html'; } },
+        { label: '🛒 Buka Menu Kota', onClick: () => { saveState(); location.href = 'trading-classic.html'; } },
         { label: 'Kembali', onClick: hideOverlay },
       ],
     );

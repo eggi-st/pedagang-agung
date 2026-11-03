@@ -2,242 +2,178 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Pedagang Agung">
-<meta name="theme-color" content="#1a1423">
-<title>Pedagang Agung — 8-Bit Trading &amp; Adventure</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
-<link rel="stylesheet" href="/styles/base.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pedagang Agung — Demo Dunia (Fase 0)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1f24;
+    font-family: system-ui, -apple-system, sans-serif; touch-action: none;
+    -webkit-user-select: none; user-select: none; }
+  #game { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+  .hud { position: fixed; z-index: 10; color: #fff; text-shadow: 0 1px 3px #000;
+    pointer-events: none; font-size: 14px; }
+  #hud-title { top: 10px; left: 12px; font-weight: 700; }
+  #hud-hint { bottom: 10px; left: 12px; opacity: 0.85; font-size: 12px; }
+  #hp-wrap { top: 36px; left: 12px; width: 180px; height: 14px; background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 7px; overflow: hidden; }
+  #hp-fill { height: 100%; width: 100%; background: #4caf50; border-radius: 6px;
+    transition: width 0.15s; }
+  #mana-wrap { top: 54px; left: 12px; width: 180px; height: 10px; background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 5px; overflow: hidden; }
+  #mana-fill { height: 100%; width: 100%; background: #42a5f5; border-radius: 4px;
+    transition: width 0.15s; }
+  #atk-btn { position: fixed; z-index: 12; right: 22px; bottom: 64px; width: 68px; height: 68px;
+    border-radius: 50%; background: rgba(200, 60, 50, 0.75); border: 2px solid rgba(255,255,255,0.6);
+    font-size: 30px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #gold-wrap { top: 70px; left: 12px; font-size: 15px; font-weight: 700; color: #ffd54a; }
+  #satiety-wrap { top: 92px; left: 12px; width: 140px; height: 10px; background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 5px; overflow: hidden; }
+  #satiety-fill { height: 100%; width: 100%; background: #ffb74d; border-radius: 4px;
+    transition: width 0.3s; }
+  #satiety-wrap::after { content: '🍖'; position: absolute; left: 146px; top: -4px; font-size: 12px; }
+  .skill-btn { position: fixed; z-index: 12; width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(40, 60, 120, 0.8); border: 2px solid rgba(255,255,255,0.6);
+    font-size: 26px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+  #skill1-btn { right: 104px; bottom: 72px; }
+  #skill2-btn { right: 30px; bottom: 148px; }
+  .skill-cd { position: absolute; inset: 0; background: rgba(0,0,0,0.65); color: #fff;
+    font-size: 20px; font-weight: 700; display: none; align-items: center;
+    justify-content: center; }
+  #prompt { position: fixed; z-index: 11; bottom: 64px; left: 50%; transform: translateX(-50%);
+    background: rgba(20, 26, 32, 0.92); color: #ffe9a8; border: 2px solid #c9a86a;
+    border-radius: 10px; padding: 10px 18px; font-size: 15px; display: none;
+    cursor: pointer; white-space: nowrap; }
+  #dialogue { position: fixed; z-index: 11; bottom: 120px; left: 50%; transform: translateX(-50%);
+    width: min(520px, 92vw); background: rgba(20, 26, 32, 0.95); color: #fff;
+    border: 2px solid #c9a86a; border-radius: 12px; padding: 12px 16px; font-size: 15px;
+    display: none; line-height: 1.5; }
+  #dialogue-name { color: #ffd54a; font-weight: 700; margin-bottom: 4px; }
+  #dialogue-hint { color: #aaa; font-size: 12px; margin-top: 8px; }
+  #menu-btn { position: fixed; z-index: 12; top: 10px; right: 12px; height: 40px;
+    padding: 0 14px; border-radius: 20px; background: rgba(20,26,32,0.8);
+    border: 2px solid rgba(255,255,255,0.5); color: #fff; font-size: 15px;
+    cursor: pointer; }
+  #menu-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .menu-tab { flex: 1; min-width: 0; background: #e8dcc0; border: 2px solid transparent;
+    border-radius: 10px; padding: 8px 4px; font-size: 13px; cursor: pointer; color: #2b2118; }
+  .menu-tab.active { border-color: #8a6238; background: #fff; font-weight: 700; }
+  .menu-tab .tabkey { display: block; font-size: 10px; color: #8a6238; }
+  #mobile-nav { position: fixed; z-index: 12; left: 0; right: 0; bottom: 0;
+    display: none; background: rgba(20,26,32,0.92); border-top: 2px solid #c9a86a;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  #mobile-nav button { flex: 1; background: none; border: none; color: #ffe9a8;
+    font-size: 22px; padding: 6px 0; cursor: pointer; position: relative; }
+  #mobile-nav button.active { color: #ffd54a; }
+  #mobile-nav .navbadge { position: absolute; top: 0; right: 18%; background: #d32f2f;
+    color: #fff; font-size: 10px; font-weight: 700; border-radius: 9px; padding: 0 6px;
+    display: none; }
+  .menu-box { width: min(520px, 94vw); }
+  /* Mobile: panel jadi lembar penuh */
+  @media (pointer: coarse), (max-width: 720px) {
+    #mobile-nav { display: flex; }
+    #menu-btn { display: none; }
+    .menu-box { width: 100vw; max-height: 92vh; height: 92vh; border-radius: 16px 16px 0 0; }
+    #menu.panel { align-items: flex-end; padding: 0; }
+    .menu-tab .tabkey { display: none; }
+    #hud-hint { display: none; }
+  }
+  .panel { position: fixed; z-index: 20; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center; padding: 20px; }
+  .panel-box { background: #f5edd8; color: #2b2118; border: 3px solid #8a6238;
+    border-radius: 12px; padding: 18px; width: min(480px, 94vw); max-height: 80vh;
+    display: flex; flex-direction: column; }
+  .panel-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .panel-sub { font-size: 13px; color: #6b5b45; margin-bottom: 10px; }
+  .panel-list { overflow-y: auto; flex: 1; }
+  .panel-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px;
+    border-bottom: 1px solid #d8c9a8; }
+  .panel-icon { font-size: 26px; width: 34px; text-align: center; flex-shrink: 0; }
+  .panel-icon img { width: 30px; height: 30px; object-fit: contain; }
+  .panel-info { flex: 1; min-width: 0; }
+  .panel-name { font-weight: 700; font-size: 14px; }
+  .panel-desc { font-size: 12px; color: #6b5b45; }
+  .panel-qty { font-size: 13px; font-weight: 700; color: #8a6238; white-space: nowrap; }
+  .panel-btn { background: #8a6238; color: #fff; border: none; border-radius: 8px;
+    padding: 7px 14px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .panel-btn:disabled { background: #b0a58c; cursor: default; }
+  .panel-close { margin-top: 12px; align-self: center; }
+  #toast { position: fixed; z-index: 11; top: 54px; left: 50%; transform: translateX(-50%);
+    background: rgba(20, 26, 32, 0.92); color: #fff; border: 1px solid #888;
+    border-radius: 8px; padding: 8px 16px; font-size: 14px; display: none;
+    pointer-events: none; white-space: nowrap; }
+  #overlay { position: fixed; z-index: 20; inset: 0; background: rgba(0, 0, 0, 0.6);
+    display: none; align-items: center; justify-content: center; padding: 20px; }
+  #overlay-box { background: #f5edd8; color: #2b2118; border: 3px solid #8a6238;
+    border-radius: 12px; padding: 22px; max-width: 420px; text-align: center; }
+  #overlay-text { font-size: 15px; line-height: 1.5; margin-bottom: 16px; }
+  #overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .overlay-btn { background: #8a6238; color: #fff; border: none; border-radius: 8px;
+    padding: 10px 24px; font-size: 15px; cursor: pointer; }
+  #joy-base { position: fixed; z-index: 12; width: 112px; height: 112px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.35);
+    display: none; pointer-events: none; }
+  #joy-knob { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px;
+    margin: -24px 0 0 -24px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45); border: 2px solid rgba(255, 255, 255, 0.7); }
+  /* Credits-line ala pokesurvivor: atribusi + legal + versi */
+  #credits-line { position: fixed; z-index: 10; right: 10px; bottom: 6px;
+    color: rgba(255,255,255,0.65); font-size: 10px; text-shadow: 0 1px 2px #000; }
+  #credits-line a { color: rgba(255,255,255,0.85); }
+  #legal-content { font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+  @media (pointer: coarse), (max-width: 720px) {
+    #credits-line { bottom: 70px; }
+  }
+</style>
 </head>
 <body>
-<div id="game">
-  <h1>⚔ PEDAGANG AGUNG ⚔</h1>
-  <div class="subtitle">8-bit trading &amp; adventure — terinspirasi Xian: The Great Merchant</div>
-
-  <div class="parade">
-    <canvas class="sprite-canvas" width="36" height="36" data-sprite="player:Joseon:Pedagang"></canvas>
-    <canvas class="sprite-canvas" width="36" height="36" data-sprite="general:3:Petarung"></canvas>
-    <canvas class="sprite-canvas" width="36" height="36" data-sprite="monster:Angin:Serigala Hutan"></canvas>
-    <canvas class="sprite-canvas" width="36" height="36" data-sprite="monster:Bumi:Golem Batu"></canvas>
-    <canvas class="sprite-canvas" width="36" height="36" data-sprite="general:5:Cendekiawan"></canvas>
-  </div>
-
-  <div id="setup-nation" class="panel">
-    <div class="city-title">Pilih Slot Simpanan</div>
-    <div class="slot-row" id="slot-row"></div>
-    <div id="continue-slot"></div>
-    <div class="city-title">Pilih Negara Asal</div>
-    <div class="choice-grid">
-      <button class="green choice" onclick="chooseNation('Joseon')">
-        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Joseon:Petarung"></canvas></span>
-        <span class="choice-body">
-          <b class="choice-name">🇰🇷 Joseon</b>
-          <small>500 gold · STR tinggi · jalur aman</small>
-        </span>
-      </button>
-      <button class="gold choice" onclick="chooseNation('China')">
-        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:China:Cendekiawan"></canvas></span>
-        <span class="choice-body">
-          <b class="choice-name">🇨🇳 China</b>
-          <small>350 gold · INT tinggi · harga barang murah</small>
-        </span>
-      </button>
-      <button class="red choice" onclick="chooseNation('Jepang')">
-        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Jepang:Pedagang"></canvas></span>
-        <span class="choice-body">
-          <b class="choice-name">🇯🇵 Jepang</b>
-          <small>300 gold · AGI &amp; LUK tinggi</small>
-        </span>
-      </button>
-    </div>
-  </div>
-
-  <div id="setup-class" class="panel" style="display:none;">
-    <div class="city-title">Nama Saudagar</div>
-    <div class="name-entry">
-      <input id="player-name-input" type="text" maxlength="14" autocomplete="off"
-        placeholder="Ketik namamu (mis. Budi)" aria-label="Nama saudagar">
-      <small>Kosongkan untuk memakai "Saudagar Kelana".</small>
-    </div>
-    <div class="city-title" style="margin-top:12px;">Pilih Kelas Karakter</div>
-    <div class="choice-grid">
-      <button class="teal choice" onclick="chooseClass('Pedagang')">
-        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Joseon:Pedagang"></canvas></span>
-        <span class="choice-body">
-          <b class="choice-name">🧑‍💼 Pedagang</b>
-          <small>Kapasitas +20 · harga beli -5%</small>
-        </span>
-      </button>
-      <button class="orange choice" onclick="chooseClass('Petarung')">
-        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:Jepang:Petarung"></canvas></span>
-        <span class="choice-body">
-          <b class="choice-name">🗡️ Petarung</b>
-          <small>ATK dasar +6 · HP maksimal +25</small>
-        </span>
-      </button>
-      <button class="purple choice" onclick="chooseClass('Cendekiawan')">
-        <span class="choice-art"><canvas class="sprite-canvas" width="40" height="40" data-sprite="player:China:Cendekiawan"></canvas></span>
-        <span class="choice-body">
-          <b class="choice-name">📚 Cendekiawan</b>
-          <small>LUK +3 · EXP +15%</small>
-        </span>
-      </button>
-    </div>
-    <button class="small" style="background:var(--panel-light); margin-top:8px;" onclick="backToNation()">← Kembali</button>
-  </div>
-
-  <div id="main-screen" style="display:none;">
-    <div class="panel hud-stats">
-      <div class="statbar">
-        <div class="stat"><span>GOLD</span><b id="s-gold">0</b></div>
-        <div class="stat"><span>HARI</span><b id="s-day">1</b></div>
-        <div class="stat hp"><span>HP</span><b id="s-hp">0</b>/<span id="s-maxhp">0</span></div>
-        <div class="stat blue"><span>LEVEL</span><b id="s-level">1</b></div>
-        <div class="stat teal"><span>MEDALI</span><b id="s-medals">0</b></div>
-        <div class="stat orange"><span>TP</span><b id="s-tp">0</b></div>
-        <div class="stat"><span>KENYANG</span><b id="s-satiety">100</b></div>
-        <div class="stat"><span>KAPASITAS</span><b id="s-cap">0</b>/<span id="s-capmax">50</span></div>
-      </div>
-    </div>
-
-    <div class="panel hud-actions" style="display:flex; flex-wrap:wrap; gap:6px; padding:8px;">
-      <button class="teal small" style="margin:0; flex:1 1 40%;" onclick="manualSave()">💾 Simpan</button>
-      <button class="purple small" style="margin:0; flex:1 1 40%;" id="mute-btn" onclick="toggleMute()">🔊 Suara</button>
-      <button class="blue small" style="margin:0; flex:1 1 40%;" id="music-btn" onclick="toggleMusic()">🎵 Musik</button>
-      <button class="orange small" style="margin:0; flex:1 1 40%;" onclick="confirmFinishJourney()">🏁 Selesaikan Perjalanan</button>
-      <button class="red small" style="margin:0; flex:1 1 40%;" onclick="confirmReset()">🗑 Reset</button>
-      <button class="teal small" style="margin:0; flex:1 1 40%;" onclick="location.href='world.html'">🗺 Dunia</button>
-    </div>
-
-    <div class="tabs">
-      <button class="tab-btn active" id="tab-trade" onclick="switchTab('trade')">Dagang</button>
-      <button class="tab-btn" id="tab-shop" onclick="switchTab('shop')">Toko</button>
-      <button class="tab-btn" id="tab-party" onclick="switchTab('party')">Karakter</button>
-      <button class="tab-btn" id="tab-peta" onclick="switchTab('peta')">Peta</button>
-    </div>
-
-    <div id="panel-trade" class="panel">
-      <div class="city-title" id="city-name-trade">Kota: -</div>
-      <div id="goods-list"></div>
-    </div>
-
-    <div id="panel-shop" class="panel" style="display:none;">
-      <div class="city-title">⚒ Pandai Besi — Senjata</div>
-      <div id="weapon-list"></div>
-      <div class="city-title" style="margin-top:10px;">⚒ Pandai Besi — Zirah</div>
-      <div id="armor-list"></div>
-      <div class="city-title" style="margin-top:10px;">🧪 Ramuan</div>
-      <div id="potion-list"></div>
-      <div class="city-title" style="margin-top:10px;">🍚 Warung Makan</div>
-      <div id="food-list"></div>
-      <div class="city-title" style="margin-top:10px;">🛏️ Penginapan</div>
-      <div id="inn-list"></div>
-      <div class="city-title" style="margin-top:10px;">🛡 Rekrut Jendral</div>
-      <div id="recruit-list"></div>
-      <div class="city-title" style="margin-top:10px;">🏭 Pabrik Produksi</div>
-      <div id="factory-status"></div>
-      <div id="factory-recipes"></div>
-      <div class="city-title" style="margin-top:6px; font-size:9px;">Barang Olahan Siap Jual</div>
-      <div id="processed-list"></div>
-      <div class="city-title" style="margin-top:10px;">💎 NPC Dagang Elit (tukar Trade Point)</div>
-      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Trade Point (TP) didapat tiap kamu jual barang. Tukar TP di sini untuk barang eksklusif.</div>
-      <div id="elite-npc-list"></div>
-    </div>
-
-    <div id="panel-party" class="panel" style="display:none;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-        <div class="icon-box lg player" id="player-avatar"><canvas class="sprite-canvas" id="player-avatar-canvas" width="40" height="40"></canvas></div>
-        <div>
-          <div style="color:var(--gold); font-size:10px;" id="player-name-label">Pedagang</div>
-          <div style="color:var(--dim); font-size:7px;" id="player-nation-label">-</div>
-        </div>
-      </div>
-      <div class="city-title">Status Karakter</div>
-      <div class="statbar">
-        <div class="stat"><span>STR</span><b id="s-str">0</b></div>
-        <div class="stat"><span>INT</span><b id="s-int">0</b></div>
-        <div class="stat"><span>AGI</span><b id="s-agi">0</b></div>
-        <div class="stat orange"><span>LUK</span><b id="s-luk">0</b></div>
-        <div class="stat"><span>ATK</span><b id="s-atk">0</b></div>
-        <div class="stat"><span>DEF</span><b id="s-def">0</b></div>
-        <div class="stat"><span>EXP</span><b id="s-exp">0</b>/<span id="s-expmax">0</span></div>
-      </div>
-      <div class="city-title" style="margin-top:8px;">Equipment</div>
-      <div class="equip-slot"><span>Senjata</span><b id="eq-weapon">Kosong</b></div>
-      <div class="equip-slot"><span>Kepala</span><b id="eq-kepala">Kosong</b></div>
-      <div class="equip-slot"><span>Badan</span><b id="eq-badan">Kosong</b></div>
-      <div class="equip-slot"><span>Celana</span><b id="eq-celana">Kosong</b></div>
-      <div class="equip-slot"><span>Sepatu</span><b id="eq-sepatu">Kosong</b></div>
-      <div class="equip-slot"><span>Aksesoris 1</span><b id="eq-acc1">Kosong</b></div>
-      <div class="equip-slot"><span>Aksesoris 2</span><b id="eq-acc2">Kosong</b></div>
-      <div class="equip-slot"><span>Ramuan Simpanan</span><b id="eq-potion">0</b></div>
-      <div class="city-title" style="margin-top:8px;">Gudang Senjata &amp; Zirah</div>
-      <div id="gear-inventory"></div>
-      <div class="city-title" style="margin-top:8px;">Tas Barang Rampasan</div>
-      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Ketuk "Pilih" pada 2 item rarity sama untuk crafting. "Simpan" menaruh item di Gudang Pusat (bisa diakses di kota mana pun).</div>
-      <div id="item-list"></div>
-      <div id="craft-action"></div>
-      <div class="city-title" style="margin-top:8px;">🏦 Gudang Pusat (Item)</div>
-      <div id="storage-list"></div>
-      <div class="city-title" style="margin-top:10px;">📜 Diagram Pusaka</div>
-      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Tukar 1 item Legendaris + gold + medali jadi pusaka tetap yang jauh lebih kuat.</div>
-      <div id="diagram-action"></div>
-      <div class="city-title" style="margin-top:8px;">Pasukan Jendral (formasi: atas = garda depan)</div>
-      <div id="merc-list"></div>
-      <div class="city-title" style="margin-top:8px;">🏰 Barak (Cadangan Pasukan)</div>
-      <div style="font-size:6.5px; color:var(--dim); margin-bottom:6px;">Pasukan aktif maksimal 6. Simpan sisanya di barak, tukar-pasang kapan saja.</div>
-      <div id="barracks-list"></div>
-      <div class="city-title" style="margin-top:8px;">🏆 Pencapaian</div>
-      <div id="ach-list"></div>
-    </div>
-
-    <div id="panel-peta" class="panel" style="display:none;">
-      <div class="city-title">🗺 Peta Wilayah</div>
-      <div id="peta-list"></div>
-    </div>
-
-    <div class="panel hud-dest">
-      <div class="city-title">Perjalanan Berikutnya</div>
-      <div class="destinations" id="dest-list"></div>
-    </div>
-
-    <div class="panel hud-log">
-      <div class="city-title">Catatan Perjalanan</div>
-      <div class="log" id="log"></div>
-    </div>
-  </div>
-
-  <div id="end-screen" class="panel" style="display:none;">
-    <h2 id="end-title">TAMAT</h2>
-    <p id="end-desc"></p>
-    <div id="end-stats" style="text-align:left; font-size:8px; color:var(--dim); margin-bottom:12px;"></div>
-    <div class="city-title" style="font-size:9px;">📈 Gold Sepanjang Perjalanan</div>
-    <canvas id="gold-chart" width="380" height="140" style="width:100%; height:auto; background:#000; border-radius:4px; margin-bottom:12px;"></canvas>
-    <button class="gold" id="ngplus-btn" style="display:none;" onclick="startNewGamePlus()">✨ Mulai New Game+</button>
-    <button class="green" onclick="location.reload()">Main Lagi (Slot Sama)</button>
+<canvas id="game"></canvas>
+<div id="hud-title" class="hud">🏯 Hanseong · Joseon — demo dunia Fase 0</div>
+<div id="hp-wrap" class="hud"><div id="hp-fill"></div></div>
+<div id="mana-wrap" class="hud"><div id="mana-fill"></div></div>
+<div id="gold-wrap" class="hud">🪙 <span id="gold-text">0</span></div>
+<div id="satiety-wrap" class="hud"><div id="satiety-fill"></div></div>
+<div id="hud-hint" class="hud">WASD jalan · E interaksi · Spasi/J serang · K/L skill · C/I/U/P menu · Esc tutup</div>
+<div id="atk-btn" data-ui>⚔️</div>
+<div id="skill1-btn" class="skill-btn" data-ui>🔥<div id="skill1-cd" class="skill-cd"></div></div>
+<div id="skill2-btn" class="skill-btn" data-ui>💨<div id="skill2-cd" class="skill-cd"></div></div>
+<div id="prompt" data-ui><span id="prompt-text"></span></div>
+<div id="dialogue"><div id="dialogue-name"></div><div id="dialogue-text"></div><div id="dialogue-hint">tekan E / ketuk untuk lanjut</div></div>
+<div id="toast"></div>
+<button id="menu-btn" data-ui>☰ Menu</button>
+<div id="menu" class="panel" data-ui><div class="panel-box menu-box">
+  <div id="menu-tabs"></div>
+  <div class="panel-list" id="menu-content"></div>
+  <button class="panel-btn panel-close" id="menu-close">Tutup</button>
+</div></div>
+<nav id="mobile-nav" data-ui>
+  <button data-tab="status">📊</button>
+  <button data-tab="tas">🎒<span class="navbadge" id="navbadge-tas"></span></button>
+  <button data-tab="equip">🛡️</button>
+  <button data-tab="party">👥</button>
+  <button data-tab="pengaturan">⚙️</button>
+</nav>
+<div id="shop" class="panel" data-ui><div class="panel-box">
+  <div class="panel-title" id="shop-title">🛒 Toko</div>
+  <div class="panel-sub">Jual barangmu ke merchant. Item quest tidak bisa dijual.</div>
+  <div class="panel-list" id="shop-list"></div>
+  <button class="panel-btn panel-close" id="shop-close">Tutup</button>
+</div></div>
+<div id="overlay" data-ui>
+  <div id="overlay-box">
+    <div id="overlay-text"></div>
+    <div id="overlay-actions"></div>
   </div>
 </div>
-
-<div id="event-overlay">
-  <div class="panel">
-    <div class="event-title" id="event-title">EVENT</div>
-    <div id="event-desc" style="margin-bottom:12px; line-height:1.7;"></div>
-    <button class="gold" onclick="closeEvent()">Lanjutkan</button>
-  </div>
-</div>
-
-<div id="battle-overlay">
-  <div class="panel">
-    <div class="event-title" id="battle-title">PERTEMPURAN</div>
-    <div class="battle-actors" id="battle-actors"></div>
-    <div class="battle-log" id="battle-log"></div>
-    <div class="battle-actions" id="battle-actions"></div>
-  </div>
-</div>
-<script type="module" src="/src/main.js"></script>
+<div id="joy-base"><div id="joy-knob"></div></div>
+<div id="credits-line">Sprite: Universal LPC (CC-BY-SA 3.0) · <a href="#" id="legal-link">Legal notice</a> · <span id="game-version"></span></div>
+<div id="legal-panel" class="panel" data-ui><div class="panel-box">
+  <div class="panel-title">Legal notice — atribusi sprite</div>
+  <div class="panel-sub">Sprite karakter &amp; monster dibuat dengan Universal LPC Spritesheet Character Generator.<br>Lisensi: CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0 — komersial boleh, atribusi wajib.</div>
+  <div class="panel-list" id="legal-content"></div>
+  <button class="panel-btn panel-close" id="legal-close">Tutup</button>
+</div></div>
+<script type="module" src="./src/world/main.js"></script>
 </body>
 </html>
