@@ -12,8 +12,9 @@ export default defineConfig({
     // (npm run dev) tetap menyajikan file HTML apa pun saat dev.
     rollupOptions: {
       input: {
-        main: 'index.html',
-        world: 'world.html',
+        main: 'index.html', // = game dunia (dulu world.html)
+        world: 'world.html', // alias, tetap bisa dibuka langsung
+        classic: 'trading-classic.html', // game dagang 8-bit lama
       },
     },
   },
