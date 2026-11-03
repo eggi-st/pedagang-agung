@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pedagang Agung — Demo Dunia (Fase 0)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1f24;
+    font-family: system-ui, -apple-system, sans-serif; touch-action: none;
+    -webkit-user-select: none; user-select: none; }
+  #game { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+  .hud { position: fixed; z-index: 10; color: #fff; text-shadow: 0 1px 3px #000;
+    pointer-events: none; font-size: 14px; }
+  #hud-title { top: 10px; left: 12px; font-weight: 700; }
+  #hud-hint { bottom: 10px; left: 12px; opacity: 0.85; font-size: 12px; }
+  #hp-wrap { top: 36px; left: 12px; width: 180px; height: 14px; background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 7px; overflow: hidden; }
+  #hp-fill { height: 100%; width: 100%; background: #4caf50; border-radius: 6px;
+    transition: width 0.15s; }
+  #mana-wrap { top: 54px; left: 12px; width: 180px; height: 10px; background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 5px; overflow: hidden; }
+  #mana-fill { height: 100%; width: 100%; background: #42a5f5; border-radius: 4px;
+    transition: width 0.15s; }
+  #atk-btn { position: fixed; z-index: 12; right: 22px; bottom: 64px; width: 68px; height: 68px;
+    border-radius: 50%; background: rgba(200, 60, 50, 0.75); border: 2px solid rgba(255,255,255,0.6);
+    font-size: 30px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #gold-wrap { top: 70px; left: 12px; font-size: 15px; font-weight: 700; color: #ffd54a; }
+  #satiety-wrap { top: 92px; left: 12px; width: 140px; height: 10px; background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 5px; overflow: hidden; }
+  #satiety-fill { height: 100%; width: 100%; background: #ffb74d; border-radius: 4px;
+    transition: width 0.3s; }
+  #satiety-wrap::after { content: '🍖'; position: absolute; left: 146px; top: -4px; font-size: 12px; }
+  .skill-btn { position: fixed; z-index: 12; width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(40, 60, 120, 0.8); border: 2px solid rgba(255,255,255,0.6);
+    font-size: 26px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+  #skill1-btn { right: 104px; bottom: 72px; }
+  #skill2-btn { right: 30px; bottom: 148px; }
+  .skill-cd { position: absolute; inset: 0; background: rgba(0,0,0,0.65); color: #fff;
+    font-size: 20px; font-weight: 700; display: none; align-items: center;
+    justify-content: center; }
+  #prompt { position: fixed; z-index: 11; bottom: 64px; left: 50%; transform: translateX(-50%);
+    background: rgba(20, 26, 32, 0.92); color: #ffe9a8; border: 2px solid #c9a86a;
+    border-radius: 10px; padding: 10px 18px; font-size: 15px; display: none;
+    cursor: pointer; white-space: nowrap; }
+  #dialogue { position: fixed; z-index: 11; bottom: 120px; left: 50%; transform: translateX(-50%);
+    width: min(520px, 92vw); background: rgba(20, 26, 32, 0.95); color: #fff;
+    border: 2px solid #c9a86a; border-radius: 12px; padding: 12px 16px; font-size: 15px;
+    display: none; line-height: 1.5; }
+  #dialogue-name { color: #ffd54a; font-weight: 700; margin-bottom: 4px; }
+  #dialogue-hint { color: #aaa; font-size: 12px; margin-top: 8px; }
+  #menu-btn { position: fixed; z-index: 12; top: 10px; right: 12px; height: 40px;
+    padding: 0 14px; border-radius: 20px; background: rgba(20,26,32,0.8);
+    border: 2px solid rgba(255,255,255,0.5); color: #fff; font-size: 15px;
+    cursor: pointer; }
+  #menu-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .menu-tab { flex: 1; min-width: 0; background: #e8dcc0; border: 2px solid transparent;
+    border-radius: 10px; padding: 8px 4px; font-size: 13px; cursor: pointer; color: #2b2118; }
+  .menu-tab.active { border-color: #8a6238; background: #fff; font-weight: 700; }
+  .menu-tab .tabkey { display: block; font-size: 10px; color: #8a6238; }
+  #mobile-nav { position: fixed; z-index: 12; left: 0; right: 0; bottom: 0;
+    display: none; background: rgba(20,26,32,0.92); border-top: 2px solid #c9a86a;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  #mobile-nav button { flex: 1; background: none; border: none; color: #ffe9a8;
+    font-size: 22px; padding: 6px 0; cursor: pointer; position: relative; }
+  #mobile-nav button.active { color: #ffd54a; }
+  #mobile-nav .navbadge { position: absolute; top: 0; right: 18%; background: #d32f2f;
+    color: #fff; font-size: 10px; font-weight: 700; border-radius: 9px; padding: 0 6px;
+    display: none; }
+  .menu-box { width: min(520px, 94vw); }
+  /* Mobile: panel jadi lembar penuh */
+  @media (pointer: coarse), (max-width: 720px) {
+    #mobile-nav { display: flex; }
+    #menu-btn { display: none; }
+    .menu-box { width: 100vw; max-height: 92vh; height: 92vh; border-radius: 16px 16px 0 0; }
+    #menu.panel { align-items: flex-end; padding: 0; }
+    .menu-tab .tabkey { display: none; }
+    #hud-hint { display: none; }
+  }
+  .panel { position: fixed; z-index: 20; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center; padding: 20px; }
+  .panel-box { background: #f5edd8; color: #2b2118; border: 3px solid #8a6238;
+    border-radius: 12px; padding: 18px; width: min(480px, 94vw); max-height: 80vh;
+    display: flex; flex-direction: column; }
+  .panel-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .panel-sub { font-size: 13px; color: #6b5b45; margin-bottom: 10px; }
+  .panel-list { overflow-y: auto; flex: 1; }
+  .panel-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px;
+    border-bottom: 1px solid #d8c9a8; }
+  .panel-icon { font-size: 26px; width: 34px; text-align: center; flex-shrink: 0; }
+  .panel-icon img { width: 30px; height: 30px; object-fit: contain; }
+  .panel-info { flex: 1; min-width: 0; }
+  .panel-name { font-weight: 700; font-size: 14px; }
+  .panel-desc { font-size: 12px; color: #6b5b45; }
+  .panel-qty { font-size: 13px; font-weight: 700; color: #8a6238; white-space: nowrap; }
+  .panel-btn { background: #8a6238; color: #fff; border: none; border-radius: 8px;
+    padding: 7px 14px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .panel-btn:disabled { background: #b0a58c; cursor: default; }
+  .panel-close { margin-top: 12px; align-self: center; }
+  #toast { position: fixed; z-index: 11; top: 54px; left: 50%; transform: translateX(-50%);
+    background: rgba(20, 26, 32, 0.92); color: #fff; border: 1px solid #888;
+    border-radius: 8px; padding: 8px 16px; font-size: 14px; display: none;
+    pointer-events: none; white-space: nowrap; }
+  #overlay { position: fixed; z-index: 20; inset: 0; background: rgba(0, 0, 0, 0.6);
+    display: none; align-items: center; justify-content: center; padding: 20px; }
+  #overlay-box { background: #f5edd8; color: #2b2118; border: 3px solid #8a6238;
+    border-radius: 12px; padding: 22px; max-width: 420px; text-align: center; }
+  #overlay-text { font-size: 15px; line-height: 1.5; margin-bottom: 16px; }
+  #overlay-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .overlay-btn { background: #8a6238; color: #fff; border: none; border-radius: 8px;
+    padding: 10px 24px; font-size: 15px; cursor: pointer; }
+  #joy-base { position: fixed; z-index: 12; width: 112px; height: 112px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.35);
+    display: none; pointer-events: none; }
+  #joy-knob { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px;
+    margin: -24px 0 0 -24px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45); border: 2px solid rgba(255, 255, 255, 0.7); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud-title" class="hud">🏯 Hanseong · Joseon — demo dunia Fase 0</div>
+<div id="hp-wrap" class="hud"><div id="hp-fill"></div></div>
+<div id="mana-wrap" class="hud"><div id="mana-fill"></div></div>
+<div id="gold-wrap" class="hud">🪙 <span id="gold-text">0</span></div>
+<div id="satiety-wrap" class="hud"><div id="satiety-fill"></div></div>
+<div id="hud-hint" class="hud">WASD jalan · E interaksi · Spasi/J serang · K/L skill · C/I/U/P menu · Esc tutup</div>
+<div id="atk-btn" data-ui>⚔️</div>
+<div id="skill1-btn" class="skill-btn" data-ui>🔥<div id="skill1-cd" class="skill-cd"></div></div>
+<div id="skill2-btn" class="skill-btn" data-ui>💨<div id="skill2-cd" class="skill-cd"></div></div>
+<div id="prompt" data-ui><span id="prompt-text"></span></div>
+<div id="dialogue"><div id="dialogue-name"></div><div id="dialogue-text"></div><div id="dialogue-hint">tekan E / ketuk untuk lanjut</div></div>
+<div id="toast"></div>
+<button id="menu-btn" data-ui>☰ Menu</button>
+<div id="menu" class="panel" data-ui><div class="panel-box menu-box">
+  <div id="menu-tabs"></div>
+  <div class="panel-list" id="menu-content"></div>
+  <button class="panel-btn panel-close" id="menu-close">Tutup</button>
+</div></div>
+<nav id="mobile-nav" data-ui>
+  <button data-tab="status">📊</button>
+  <button data-tab="tas">🎒<span class="navbadge" id="navbadge-tas"></span></button>
+  <button data-tab="equip">🛡️</button>
+  <button data-tab="party">👥</button>
+  <button data-tab="pengaturan">⚙️</button>
+</nav>
+<div id="shop" class="panel" data-ui><div class="panel-box">
+  <div class="panel-title" id="shop-title">🛒 Toko</div>
+  <div class="panel-sub">Jual barangmu ke merchant. Item quest tidak bisa dijual.</div>
+  <div class="panel-list" id="shop-list"></div>
+  <button class="panel-btn panel-close" id="shop-close">Tutup</button>
+</div></div>
+<div id="overlay" data-ui>
+  <div id="overlay-box">
+    <div id="overlay-text"></div>
+    <div id="overlay-actions"></div>
+  </div>
+</div>
+<div id="joy-base"><div id="joy-knob"></div></div>
+<script type="module" src="./src/world/main.js"></script>
+</body>
+</html>

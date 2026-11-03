@@ -1,0 +1,86 @@
+{
+  "companion-tabib": {
+    "file": "companion-tabib.png",
+    "type": "character",
+    "w": 900,
+    "h": 1968
+  },
+  "pedagang-a": {
+    "file": "pedagang-a.png",
+    "type": "character",
+    "w": 928,
+    "h": 2146
+  },
+  "goblin-hutan": {
+    "file": "goblin-hutan.png",
+    "type": "monster",
+    "w": 1449,
+    "h": 1423,
+    "states": {
+      "Idle": "goblin-hutan.png",
+      "Walk": "goblin-hutan-Walk.png",
+      "Attack": "goblin-hutan-Attack.png",
+      "Hurt": "goblin-hutan-Hurt.png"
+    }
+  },
+  "companion-pemanah": {
+    "file": "companion-pemanah.png",
+    "type": "character",
+    "w": 913,
+    "h": 1988
+  },
+  "monster-serigala-hutan": {
+    "file": "monster-serigala-hutan.png",
+    "type": "monster",
+    "w": 1349,
+    "h": 1119
+  },
+  "monster-jamur-raksasa": {
+    "file": "monster-jamur-raksasa.png",
+    "type": "monster",
+    "w": 1239,
+    "h": 1356
+  },
+  "companion-pendekar": {
+    "file": "companion-pendekar.png",
+    "type": "character",
+    "w": 685,
+    "h": 1483
+  },
+  "npc-penjaga-toko": {
+    "file": "npc-penjaga-toko.png",
+    "type": "npc",
+    "w": 864,
+    "h": 1842
+  },
+  "npc-nenek-penginapan": {
+    "file": "npc-nenek-penginapan.png",
+    "type": "npc",
+    "w": 827,
+    "h": 1967
+  },
+  "item-pedang-besi": {
+    "file": "item-pedang-besi.png",
+    "type": "item",
+    "w": 1485,
+    "h": 1517
+  },
+  "item-ramuan-merah": {
+    "file": "item-ramuan-merah.png",
+    "type": "item",
+    "w": 700,
+    "h": 963
+  },
+  "item-karung-emas": {
+    "file": "item-karung-emas.png",
+    "type": "item",
+    "w": 976,
+    "h": 1135
+  },
+  "monster-laba-laba-hutan": {
+    "file": "monster-laba-laba-hutan.png",
+    "type": "monster",
+    "w": 1576,
+    "h": 1071
+  }
+}
